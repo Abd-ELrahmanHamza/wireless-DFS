@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package= "mp4_service/";
+
+message UploadRequest {
+    int32 size = 1;
+}
+
+message UploadResponse {
+    int32 port = 1;
+}
+
+service MP4Service {
+    rpc Upload(UploadRequest) returns (UploadResponse);
+}
