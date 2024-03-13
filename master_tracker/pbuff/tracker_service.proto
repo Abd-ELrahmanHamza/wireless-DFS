@@ -19,25 +19,13 @@ message SendingFinished {
   int32 DK_ID = 1;
   string filePath = 2;
 }
-message SendingFinishedResponse {
-  int32 DK_ID = 1;
-}
+message SendingFinishedResponse { int32 DK_ID = 1; }
 
-message UploadFileRequest {
-  int32 DK_ID = 1;
-  string filePath = 2;
-}
-message UploadFileResponse {
-  string port = 1;
-}
+message UploadFileRequest { string filePath = 1; }
+message UploadFileResponse { string port = 1; }
 
-message DownloadFileRequest {
-  int32 DK_ID = 1;
-  string filePath = 2;
-}
-message DownloadFileResponse {
-  repeated string DK_Addresses = 1;
-}
+message DownloadFileRequest { string fileName = 1; }
+message DownloadFileResponse { repeated string DK_Addresses = 1; }
 
 // Example service
 service TrackerService {
