@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	pb "dfs/master_tracker/pbuff"
-	"fmt"
+	"log"
+	"time"
 )
 
 type TrackerServer struct {
@@ -11,8 +12,19 @@ type TrackerServer struct {
 }
 
 func (s *TrackerServer) PingMe(ctx context.Context, req *pb.PingRequest) (*pb.PingResponse, error) {
-	text := req.GetDK_ID()
-	fmt.Println("Received ping from: ", text)
+	dk_id := req.GetDK_ID()
+	log.Println("Received ping Signal from: ", dk_id)
+	// check if the data keeper node is in the lookup table
+	if _, ok := DataNodes_Map[dk_id]; ok {
+		// update the last ping time
+		DataNodes_Map[dk_id].LastPingstamp = time.Now()
+	} else {
+		log.Println("DataKeeperNode with ID: ", dk_id, " is not in the lookup table")
+		return &pb.PingResponse{
+			OK: false, // https://pbs.twimg.com/media/F01nLwRWcAYL77x.jpg
+		}, nil
+	}
+
 	return &pb.PingResponse{
 		OK: true,
 	}, nil
@@ -23,7 +35,26 @@ func (s *TrackerServer) sendInitalData(ctx context.Context, req *pb.InitialDataR
 	// TODO make sure ports are unique
 	d_port := req.GetDK_Port()
 	d_id := nodesCounter()
-	DataNodes_Map[d_id] = &DataNode{d_id, d_port}
-	
+	// add the data keeper node to the Nodes table
+	DataNodes_Map[d_id] = &DataNode{d_id, d_port, time.Now()}
 	return &pb.InitialDataResponse{DK_ID: nodesCounter()}, nil
+}
+
+func sendingFinished(ctx context.Context, req *pb.SendingFinishedRequest) (*pb.SendingFinishedResponse, error) {
+	dk_id := req.GetDK_ID()
+	log.Println("Received sending finished signal from: ", dk_id)
+	// check if the data keeper node is in the lookup table
+	if _, ok := DataNodes_Map[dk_id]; ok {
+		// update the last ping time
+		// TODO : SEND TO CLIENT THAT FILE IS READY
+
+	} else {
+		log.Println("DataKeeperNode with ID: ", dk_id, " is not in the lookup table")
+		return &pb.SendingFinishedResponse{
+			OK: false, // https://pbs.twimg.com/media/F01nLwRWcAYL77x.jpg
+		}, nil
+	}
+	return &pb.SendingFinishedResponse{
+		OK: true,
+	}, nil
 }

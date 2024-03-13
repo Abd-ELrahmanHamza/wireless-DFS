@@ -25,7 +25,7 @@ type TrackerServiceClient interface {
 	// from Datakeepers
 	PingMe(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	SendInitalData(ctx context.Context, in *InitialDataRequest, opts ...grpc.CallOption) (*InitialDataResponse, error)
-	SendingFinished(ctx context.Context, in *SendingFinished, opts ...grpc.CallOption) (*SendingFinishedResponse, error)
+	SendingFinished(ctx context.Context, in *SendingFinishedRequest, opts ...grpc.CallOption) (*SendingFinishedResponse, error)
 	// from Clients
 	UploadFile(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error)
 	DownloadFile(ctx context.Context, in *DownloadFileRequest, opts ...grpc.CallOption) (*DownloadFileResponse, error)
@@ -57,7 +57,7 @@ func (c *trackerServiceClient) SendInitalData(ctx context.Context, in *InitialDa
 	return out, nil
 }
 
-func (c *trackerServiceClient) SendingFinished(ctx context.Context, in *SendingFinished, opts ...grpc.CallOption) (*SendingFinishedResponse, error) {
+func (c *trackerServiceClient) SendingFinished(ctx context.Context, in *SendingFinishedRequest, opts ...grpc.CallOption) (*SendingFinishedResponse, error) {
 	out := new(SendingFinishedResponse)
 	err := c.cc.Invoke(ctx, "/tracker.TrackerService/sendingFinished", in, out, opts...)
 	if err != nil {
@@ -91,7 +91,7 @@ type TrackerServiceServer interface {
 	// from Datakeepers
 	PingMe(context.Context, *PingRequest) (*PingResponse, error)
 	SendInitalData(context.Context, *InitialDataRequest) (*InitialDataResponse, error)
-	SendingFinished(context.Context, *SendingFinished) (*SendingFinishedResponse, error)
+	SendingFinished(context.Context, *SendingFinishedRequest) (*SendingFinishedResponse, error)
 	// from Clients
 	UploadFile(context.Context, *UploadFileRequest) (*UploadFileResponse, error)
 	DownloadFile(context.Context, *DownloadFileRequest) (*DownloadFileResponse, error)
@@ -108,7 +108,7 @@ func (UnimplementedTrackerServiceServer) PingMe(context.Context, *PingRequest) (
 func (UnimplementedTrackerServiceServer) SendInitalData(context.Context, *InitialDataRequest) (*InitialDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendInitalData not implemented")
 }
-func (UnimplementedTrackerServiceServer) SendingFinished(context.Context, *SendingFinished) (*SendingFinishedResponse, error) {
+func (UnimplementedTrackerServiceServer) SendingFinished(context.Context, *SendingFinishedRequest) (*SendingFinishedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendingFinished not implemented")
 }
 func (UnimplementedTrackerServiceServer) UploadFile(context.Context, *UploadFileRequest) (*UploadFileResponse, error) {
@@ -167,7 +167,7 @@ func _TrackerService_SendInitalData_Handler(srv interface{}, ctx context.Context
 }
 
 func _TrackerService_SendingFinished_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendingFinished)
+	in := new(SendingFinishedRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func _TrackerService_SendingFinished_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/tracker.TrackerService/sendingFinished",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TrackerServiceServer).SendingFinished(ctx, req.(*SendingFinished))
+		return srv.(TrackerServiceServer).SendingFinished(ctx, req.(*SendingFinishedRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

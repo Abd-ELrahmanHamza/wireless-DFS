@@ -15,11 +15,11 @@ message InitialDataResponse {
   int32 DK_ID = 1;
 }
 
-message SendingFinished {
+message SendingFinishedRequest {
   int32 DK_ID = 1;
-  string filePath = 2;
+  string fileName = 2;
 }
-message SendingFinishedResponse { int32 DK_ID = 1; }
+message SendingFinishedResponse { bool OK = 1; }
 
 message UploadFileRequest { string filePath = 1; }
 message UploadFileResponse { string port = 1; }
@@ -32,7 +32,7 @@ service TrackerService {
   // from Datakeepers
   rpc pingMe(PingRequest) returns (PingResponse);
   rpc sendInitalData(InitialDataRequest) returns (InitialDataResponse);
-  rpc sendingFinished(SendingFinished) returns (SendingFinishedResponse);
+  rpc sendingFinished(SendingFinishedRequest) returns (SendingFinishedResponse);
   // from Clients
   rpc uploadFile(UploadFileRequest) returns (UploadFileResponse);
   rpc downloadFile(DownloadFileRequest) returns (DownloadFileResponse);
