@@ -44,9 +44,10 @@ func sendingFinished(ctx context.Context, req *pb.SendingFinishedRequest) (*pb.S
 	dk_id := req.GetDK_ID()
 	log.Println("Received sending finished signal from: ", dk_id)
 	// check if the data keeper node is in the lookup table
-	if _, ok := DataNodes_Map[dk_id]; ok {
+	if dnode, ok := DataNodes_Map[dk_id]; ok {
 		// update the last ping time
 		// TODO : SEND TO CLIENT THAT FILE IS READY
+		FilesLookupTable.Put(req.GetFileName(), &lookupEntry{dnode, req.GetFileName()})
 
 	} else {
 		log.Println("DataKeeperNode with ID: ", dk_id, " is not in the lookup table")
