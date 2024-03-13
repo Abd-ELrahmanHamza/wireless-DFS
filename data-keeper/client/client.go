@@ -56,7 +56,7 @@ func main() {
 		return
 	}
 	// fmt.Println("Upload response:", string(uploadResponse.GetFileContent()))
-	fmt.Println("Upload response:", string(uploadResponse.String()[0:100]))
+	fmt.Println("Upload response:", uploadResponse.GetSuccess())
 
 	// Download file
 	downloadStream, err := c.DownloadFile(context.Background(), &pb.FileRequest{FileName: "example.mp4"})
@@ -88,4 +88,13 @@ func main() {
 		}
 	}
 	fmt.Println("File downloaded successfully.")
+
+	// Replicate file
+	replicateResponse, err := c.ReplicateFile(context.Background(), &pb.ReplicateRequest{FileName: "downloaded.mp4", Port: "8081"})
+	if err != nil {
+		fmt.Println("Error calling ReplicateFile:", err)
+		return
+	}
+	fmt.Println("Replicate response:", replicateResponse.GetOk())
+
 }

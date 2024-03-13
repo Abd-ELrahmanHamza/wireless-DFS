@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	MP4Service_UploadFile_FullMethodName   = "/mp4.MP4Service/UploadFile"
-	MP4Service_DownloadFile_FullMethodName = "/mp4.MP4Service/DownloadFile"
+	MP4Service_UploadFile_FullMethodName    = "/mp4.MP4Service/UploadFile"
+	MP4Service_DownloadFile_FullMethodName  = "/mp4.MP4Service/DownloadFile"
+	MP4Service_ReplicateFile_FullMethodName = "/mp4.MP4Service/ReplicateFile"
 )
 
 // MP4ServiceClient is the client API for MP4Service service.
@@ -29,6 +30,7 @@ const (
 type MP4ServiceClient interface {
 	UploadFile(ctx context.Context, opts ...grpc.CallOption) (MP4Service_UploadFileClient, error)
 	DownloadFile(ctx context.Context, in *FileRequest, opts ...grpc.CallOption) (MP4Service_DownloadFileClient, error)
+	ReplicateFile(ctx context.Context, in *ReplicateRequest, opts ...grpc.CallOption) (*ReplicateResponse, error)
 }
 
 type mP4ServiceClient struct {
@@ -105,12 +107,22 @@ func (x *mP4ServiceDownloadFileClient) Recv() (*FileChunk, error) {
 	return m, nil
 }
 
+func (c *mP4ServiceClient) ReplicateFile(ctx context.Context, in *ReplicateRequest, opts ...grpc.CallOption) (*ReplicateResponse, error) {
+	out := new(ReplicateResponse)
+	err := c.cc.Invoke(ctx, MP4Service_ReplicateFile_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MP4ServiceServer is the server API for MP4Service service.
 // All implementations must embed UnimplementedMP4ServiceServer
 // for forward compatibility
 type MP4ServiceServer interface {
 	UploadFile(MP4Service_UploadFileServer) error
 	DownloadFile(*FileRequest, MP4Service_DownloadFileServer) error
+	ReplicateFile(context.Context, *ReplicateRequest) (*ReplicateResponse, error)
 	mustEmbedUnimplementedMP4ServiceServer()
 }
 
@@ -123,6 +135,9 @@ func (UnimplementedMP4ServiceServer) UploadFile(MP4Service_UploadFileServer) err
 }
 func (UnimplementedMP4ServiceServer) DownloadFile(*FileRequest, MP4Service_DownloadFileServer) error {
 	return status.Errorf(codes.Unimplemented, "method DownloadFile not implemented")
+}
+func (UnimplementedMP4ServiceServer) ReplicateFile(context.Context, *ReplicateRequest) (*ReplicateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReplicateFile not implemented")
 }
 func (UnimplementedMP4ServiceServer) mustEmbedUnimplementedMP4ServiceServer() {}
 
@@ -184,13 +199,36 @@ func (x *mP4ServiceDownloadFileServer) Send(m *FileChunk) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _MP4Service_ReplicateFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReplicateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MP4ServiceServer).ReplicateFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MP4Service_ReplicateFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MP4ServiceServer).ReplicateFile(ctx, req.(*ReplicateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MP4Service_ServiceDesc is the grpc.ServiceDesc for MP4Service service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var MP4Service_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "mp4.MP4Service",
 	HandlerType: (*MP4ServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ReplicateFile",
+			Handler:    _MP4Service_ReplicateFile_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "UploadFile",

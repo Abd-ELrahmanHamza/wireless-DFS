@@ -18,10 +18,20 @@ message FileRequest {
 }
 
 message FileResponse {
-    bytes file_content = 1;
+    bool success = 1;
+}
+
+message ReplicateRequest{
+    string port = 1;
+    string file_name = 2;
+}
+
+message ReplicateResponse{
+    bool ok = 1;
 }
 
 service MP4Service {
     rpc UploadFile(stream FileUpload) returns (FileResponse);
     rpc DownloadFile(FileRequest) returns (stream FileChunk);
+    rpc ReplicateFile(ReplicateRequest)  returns (ReplicateResponse);
 }

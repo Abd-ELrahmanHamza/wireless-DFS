@@ -1,8 +1,9 @@
 package main
 
 import (
-	// "context"
+	"context"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	// "path/filepath"
@@ -28,7 +29,6 @@ func (s *mp4Server) UploadFile(stream pb.MP4Service_UploadFileServer) error {
 	// Receive and write chunks to the temporary file
 	for {
 		chunk, err := stream.Recv()
-		println(chunk.GetFileName())
 		if err != nil {
 			if err.Error() == "EOF" {
 				break
@@ -41,14 +41,7 @@ func (s *mp4Server) UploadFile(stream pb.MP4Service_UploadFileServer) error {
 		}
 	}
 
-	// Send response with file content
-	fileContent, err := os.ReadFile(tmpFile.Name())
-	if err != nil {
-		return fmt.Errorf("failed to read file content: %v", err)
-	}
-	// save file
-
-	return stream.SendAndClose(&pb.FileResponse{FileContent: fileContent})
+	return stream.SendAndClose(&pb.FileResponse{Success: true})
 }
 
 func (s *mp4Server) DownloadFile(req *pb.FileRequest, stream pb.MP4Service_DownloadFileServer) error {
@@ -79,8 +72,65 @@ func (s *mp4Server) DownloadFile(req *pb.FileRequest, stream pb.MP4Service_Downl
 	return nil
 }
 
+func (s *mp4Server) ReplicateFile(ctx context.Context, req *pb.ReplicateRequest) (*pb.ReplicateResponse, error) {
+	fmt.Println(req.FileName, req.Port)
+
+	// You can add logic here to replicate the file to the specified port
+	GetFileFromDK(req.Port, req.FileName)
+	// Return a success response
+	return &pb.ReplicateResponse{Ok: true}, nil
+}
+
+func GetFileFromDK(port string, file_name string) {
+	print("replicating file ", file_name, "from port ", port)
+	conn, err := grpc.Dial("localhost:"+port, grpc.WithInsecure())
+	if err != nil {
+		fmt.Println("did not connect:", err)
+		return
+	}
+	defer conn.Close()
+	c := pb.NewMP4ServiceClient(conn)
+
+	// Download file
+	downloadStream, err := c.DownloadFile(context.Background(), &pb.FileRequest{FileName: "example.mp4"})
+	if err != nil {
+		fmt.Println("Error calling DownloadFile:", err)
+		return
+	}
+	outputFile, err := os.Create(file_name)
+	if err != nil {
+		fmt.Println("Error creating output file:", err)
+		return
+	}
+	defer outputFile.Close()
+
+	// Receive and write file content in chunks
+	for {
+		chunk, err := downloadStream.Recv()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			fmt.Println("Error receiving chunk:", err)
+			return
+		}
+		_, err = outputFile.Write(chunk.GetChunk())
+		if err != nil {
+			fmt.Println("Error writing chunk to file:", err)
+			return
+		}
+	}
+	fmt.Println("File downloaded successfully.")
+}
+
 func main() {
-	lis, err := net.Listen("tcp", ":8080")
+	// read port from console
+	var port string
+	fmt.Println("Enter port number: ")
+	fmt.Scanln(&port)
+	fmt.Println("Port number is: ", port)
+
+	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		fmt.Println("failed to listen:", err)
 		return
