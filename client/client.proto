@@ -4,12 +4,17 @@ option go_package= "mp4_service/";
 
 message UploadRequest {
     int32 size = 1;
+    // client port
+    int32 port = 2;
 }
 
 message UploadResponse {
     int32 port = 1;
 }
+message UploadingCompletionRequest{}
+message UploadingCompletionResponse{}
 
 service MP4Service {
     rpc Upload(UploadRequest) returns (UploadResponse);
+    rpc UploadingCompletion(UploadingCompletionRequest) returns (UploadingCompletionResponse);
 }

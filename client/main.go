@@ -67,20 +67,16 @@ func SendFile2DK(port int32, file *os.File) {
 	}
 }
 
-//func CheckStorageStatus(client pb.MP4ServiceClient) {
-//	// Create context
-//	ctx := context.Background()
-//
-//	// Create request
-//	req := &pb.StorageStatusRequest{}
-//
-//	// Send request
-//	res, err := client.StorageStatus(ctx, req)
-//	if err != nil {
-//		log.Fatalf("Failed to get storage status: %v", err)
-//	}
-//	log.Printf("Storage status: %d/%d", res.GetUsed(), res.GetTotal())
-//}
+type MP4Checker struct {
+	pb.UnimplementedMP4ServiceServer
+}
+
+func (s *MP4Checker) UploadingCompletion(ctx context.Context, req *pb.UploadingCompletionRequest) (*pb.UploadingCompletionResponse, error) {
+	log.Println("MP4 file has been uploaded successfully")
+	// kill the client after the file has been uploaded
+	defer os.Exit(0)
+	return &pb.UploadingCompletionResponse{}, nil
+}
 
 func main() {
 	// Connect to the server
@@ -95,15 +91,30 @@ func main() {
 		}
 	}(conn)
 
+	mode := os.Args[1]
 	// Open file
-	filePath := os.Args[1]
+	filePath := os.Args[2]
 	file := OpenFile(filePath)
 
-	// Request upload
-	port := RequestUpload(file, conn)
-	log.Printf("Received port: %d", port)
+	if mode == "upload" {
+		// Request upload
+		port := RequestUpload(file, conn)
+		log.Printf("Received port: %d", port)
 
-	// Send file to dk
-	SendFile2DK(port, file)
+		// Send file to dk
+		SendFile2DK(port, file)
 
+		// client works as a server to receive the completion message from the server
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", 5000))
+		if err != nil {
+			log.Fatalf("Failed to listen: %v", err)
+		}
+		s := grpc.NewServer()
+		pb.RegisterMP4ServiceServer(s, &MP4Checker{})
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("Failed to serve: %v", err)
+		}
+	} else if mode == "download" {
+		// Request download
+	}
 }
