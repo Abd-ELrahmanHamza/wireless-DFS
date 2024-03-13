@@ -15,7 +15,7 @@ type MP4Server struct {
 
 func (s *MP4Server) Upload(ctx context.Context, req *pb.UploadRequest) (*pb.UploadResponse, error) {
 	log.Printf("Received: %v", req.GetSize())
-	return &pb.UploadResponse{Port: 1000}, nil
+	return &pb.UploadResponse{Port: 989386}, nil
 }
 
 func main() {
