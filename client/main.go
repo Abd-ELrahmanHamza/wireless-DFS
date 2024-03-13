@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 )
@@ -24,7 +25,7 @@ func CreateUploadRequest(file *os.File) *pb.UploadRequest {
 	if err != nil {
 		log.Fatalf("Failed to get file info: %v", err)
 	}
-	return &pb.UploadRequest{Size: int32(fileInfo.Size())}
+	return &pb.UploadRequest{Size: int32(fileInfo.Size()), Port: 5000}
 }
 
 func RequestPort(req *pb.UploadRequest, client pb.MP4ServiceClient) int32 {
@@ -55,9 +56,9 @@ func SendFile2DK(port int32, file *os.File) {
 		log.Fatalf("Failed to connect: %v", err)
 	}
 	defer func(conn net.Conn) {
-		err := conn.Close()
-		if err != nil {
-			log.Fatalf("Failed to close connection: %v", err)
+		err2 := conn.Close()
+		if err2 != nil {
+			log.Fatalf("Failed to close connection: %v", err2)
 		}
 	}(conn)
 	// send file from client to server
@@ -77,17 +78,61 @@ func (s *MP4Checker) UploadingCompletion(ctx context.Context, req *pb.UploadingC
 	defer os.Exit(0)
 	return &pb.UploadingCompletionResponse{}, nil
 }
+func GetDataKeepersPorts(conn *grpc.ClientConn, name string) []int32 {
+	// Create Client
+	client := pb.NewMP4ServiceClient(conn)
+	// Create Download Request
+	req := &pb.DownloadRequest{Name: name}
+	res, err := client.Download(context.Background(), req)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	ports := res.GetPorts()
+	return ports
+}
+
+func SelectDK(ports []int32) int32 {
+	// select a random data keeper uniformly
+	index := rand.Intn(len(ports))
+	return ports[index]
+}
+
+func DownloadFile(conn net.Conn) {
+	// receive file from server
+	file, err := os.Create("download.mp4")
+	if err != nil {
+		log.Fatalf("Failed to create file: %v", err)
+	}
+	defer func(file *os.File) {
+		err2 := file.Close()
+		if err2 != nil {
+			log.Fatalf("Failed to close file: %v", err2)
+		}
+	}(file)
+	// copy the file from the connection to the file
+	_, err = io.Copy(file, conn)
+	if err != nil {
+		log.Fatalf("Failed to receive file: %v", err)
+	}
+}
 
 func main() {
-	// Connect to the server
-	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure(), grpc.WithBlock())
+	// client works as a server to receive the completion message from the server
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", 5000))
+	log.Println("Client starts listening on port 5000...")
 	if err != nil {
-		log.Fatalf("Failed to connect: %v", err)
+		log.Fatalf("Failed to listen: %v", err)
+	}
+
+	// Connect to the server
+	conn, err2 := grpc.Dial("localhost:8080", grpc.WithInsecure(), grpc.WithBlock())
+	if err2 != nil {
+		log.Fatalf("Failed to connect: %v", err2)
 	}
 	defer func(conn *grpc.ClientConn) {
-		err := conn.Close()
-		if err != nil {
-			log.Fatalf("Failed to close connection: %v", err)
+		err3 := conn.Close()
+		if err3 != nil {
+			log.Fatalf("Failed to close connection: %v", err3)
 		}
 	}(conn)
 
@@ -104,17 +149,28 @@ func main() {
 		// Send file to dk
 		SendFile2DK(port, file)
 
-		// client works as a server to receive the completion message from the server
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", 5000))
-		if err != nil {
-			log.Fatalf("Failed to listen: %v", err)
-		}
 		s := grpc.NewServer()
 		pb.RegisterMP4ServiceServer(s, &MP4Checker{})
-		if err := s.Serve(lis); err != nil {
-			log.Fatalf("Failed to serve: %v", err)
+		if err4 := s.Serve(lis); err4 != nil {
+			log.Fatalf("Failed to serve: %v", err4)
 		}
 	} else if mode == "download" {
 		// Request download
+		ports := GetDataKeepersPorts(conn, filePath)
+		port := SelectDK(ports)
+		log.Printf("Received port: %d", port)
+
+		conn2, err5 := lis.Accept()
+		if err5 != nil {
+			log.Fatalf("Failed to accept: %v", err5)
+		}
+		defer func(conn net.Conn) {
+			err6 := conn2.Close()
+			if err6 != nil {
+				log.Fatalf("Failed to close connection: %v", err6)
+			}
+		}(conn2)
+
+		DownloadFile(conn2)
 	}
 }
