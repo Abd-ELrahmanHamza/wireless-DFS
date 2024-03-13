@@ -49,7 +49,7 @@ func (c *mP4ServiceClient) UploadFile(ctx context.Context, opts ...grpc.CallOpti
 }
 
 type MP4Service_UploadFileClient interface {
-	Send(*FileChunk) error
+	Send(*FileUpload) error
 	CloseAndRecv() (*FileResponse, error)
 	grpc.ClientStream
 }
@@ -58,7 +58,7 @@ type mP4ServiceUploadFileClient struct {
 	grpc.ClientStream
 }
 
-func (x *mP4ServiceUploadFileClient) Send(m *FileChunk) error {
+func (x *mP4ServiceUploadFileClient) Send(m *FileUpload) error {
 	return x.ClientStream.SendMsg(m)
 }
 
@@ -143,7 +143,7 @@ func _MP4Service_UploadFile_Handler(srv interface{}, stream grpc.ServerStream) e
 
 type MP4Service_UploadFileServer interface {
 	SendAndClose(*FileResponse) error
-	Recv() (*FileChunk, error)
+	Recv() (*FileUpload, error)
 	grpc.ServerStream
 }
 
@@ -155,8 +155,8 @@ func (x *mP4ServiceUploadFileServer) SendAndClose(m *FileResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *mP4ServiceUploadFileServer) Recv() (*FileChunk, error) {
-	m := new(FileChunk)
+func (x *mP4ServiceUploadFileServer) Recv() (*FileUpload, error) {
+	m := new(FileUpload)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}

@@ -45,7 +45,7 @@ func main() {
 			fmt.Println("Error reading file:", err)
 			return
 		}
-		if err := uploadStream.Send(&pb.FileChunk{Chunk: buffer[:n]}); err != nil {
+		if err := uploadStream.Send(&pb.FileUpload{Chunk: buffer[:n], FileName: "example.mp4"}); err != nil {
 			fmt.Println("Error sending chunk:", err)
 			return
 		}

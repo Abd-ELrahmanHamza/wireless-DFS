@@ -8,6 +8,11 @@ message FileChunk {
     bytes chunk = 1;
 }
 
+message FileUpload {
+    bytes chunk = 1;
+    string file_name = 2;
+}
+
 message FileRequest {
     string file_name = 1;
 }
@@ -17,6 +22,6 @@ message FileResponse {
 }
 
 service MP4Service {
-    rpc UploadFile(stream FileChunk) returns (FileResponse);
+    rpc UploadFile(stream FileUpload) returns (FileResponse);
     rpc DownloadFile(FileRequest) returns (stream FileChunk);
 }
