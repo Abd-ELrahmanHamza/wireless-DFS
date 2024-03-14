@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"strings"
@@ -123,7 +124,7 @@ func handleDownload(conn net.Conn) {
 		return
 	}
 	filename := strings.TrimSpace(string(buffer[:n]))
-
+	log.Printf("Received filename: %s\n", filename)
 	// Send confirmation to the client
 	confirmation := "Server ready for download operation"
 	_, err = conn.Write([]byte(confirmation))

@@ -56,8 +56,7 @@ func RequestUpload(file *os.File, conn *grpc.ClientConn) string {
 	ID = id
 	return address
 }
-func SendFileName2DK(conn net.Conn, file *os.File) {
-	fileName := file.Name()
+func SendFileName2DK(conn net.Conn, fileName string) {
 	fileNameLength := len(fileName)
 	err0 := binary.Write(conn, binary.BigEndian, int32(fileNameLength))
 	if err0 != nil {
@@ -84,7 +83,7 @@ func SendFile2DK(address string, file *os.File) {
 	if err3 != nil {
 		log.Fatalf("Failed to write: %v", err3)
 	}
-	SendFileName2DK(conn, file)
+	SendFileName2DK(conn, file.Name())
 	// send file size
 	fileInfo, err := file.Stat()
 	if err != nil {
@@ -144,7 +143,7 @@ func DownloadFile(conn net.Conn, fileName string) {
 		}
 	}(file)
 	// send file name to the server
-	SendFileName2DK(conn, file)
+	SendFileName2DK(conn, fileName)
 	// copy the file from the connection to the file
 	_, err = io.Copy(file, conn)
 	if err != nil {
