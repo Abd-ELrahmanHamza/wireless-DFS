@@ -19,7 +19,7 @@ func (s *TrackerServer) PingMe(ctx context.Context, req *pb.PingRequest) (*pb.Pi
 		// update the last ping time
 		DataNodes_Map[dk_id].LastPingstamp = time.Now()
 	} else {
-		log.Println("DataKeeperNode with ID: ", dk_id, " is not in the lookup table")
+		log.Println("In PingMe from master: DataKeeperNode with ID: ", dk_id, " is not in the lookup table")
 		return &pb.PingResponse{
 			OK: false, // https://pbs.twimg.com/media/F01nLwRWcAYL77x.jpg
 		}, nil
@@ -36,6 +36,7 @@ func (s *TrackerServer) SendInitalData(ctx context.Context, req *pb.InitialDataR
 	log.Println("Received initial data from: ", req.GetDK_Addrs())
 	dk_addresses := req.GetDK_Addrs()
 	d_id := nodesCounter()
+	log.Println("DataKeeperNode ID: ", d_id)
 	// add the data keeper node to the Nodes table
 	DataNodes_Map[d_id] = &DataNode{d_id, dk_addresses, time.Now()}
 	return &pb.InitialDataResponse{DK_ID: nodesCounter()}, nil
