@@ -3,7 +3,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 
@@ -95,12 +94,37 @@ func check_replications_goRoutine() {
 
 }
 
+// a function that get datakeeper ports that contain a certain file name
+func getPorts(fileName string) []string {
+	ports := []string{}
+	values, found := FilesLookupTable.Get(fileName)
+	if found {
+		for _, v := range values {
+			ports = append(ports, v.(*lookupEntry).DataKeeperNode.Addr)
+		}
+	}
+	return ports
+}
+
+// a function that returns the number of data keeper nodes
+func getRandomPort() string {
+	ports := []string{}
+	for _, node := range DataNodes_Map {
+		ports = append(ports, node.Addr)
+	}
+	return ports[rand.Intn(len(ports))]
+}
+
 func main() {
 	// create a lookup table of file names and their corresponding data keeper nodes with the file name as the key
 	FilesLookupTable.Put("file2", &lookupEntry{&DataNode{3, "localhost:8083", time.Now()}, "file2"})
-	log.Println(FilesLookupTable.Get("file2"))
+	FilesLookupTable.Put("file2", &lookupEntry{&DataNode{4, "localhost:8084", time.Now()}, "file2"})
+	FilesLookupTable.Put("file2", &lookupEntry{&DataNode{5, "localhost:8085", time.Now()}, "file2"})
+	FilesLookupTable.Put("file1", &lookupEntry{&DataNode{1, "localhost:8081", time.Now()}, "file1"})
+	FilesLookupTable.Put("file1", &lookupEntry{&DataNode{2, "localhost:8082", time.Now()}, "file1"})
+	fmt.Println(getPorts("file2"))
 
-	println(nodesCounter())
-	println(nodesCounter())
+	// println(nodesCounter())
+	// println(nodesCounter())
 	// run_grpc()
 }
