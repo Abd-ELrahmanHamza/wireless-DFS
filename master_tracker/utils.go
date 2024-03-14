@@ -137,11 +137,6 @@ type ClientNode struct {
 	Port string // data keeper ports used by client
 }
 
-// String function for ClientNode
-func (c *ClientNode) String() string {
-	return fmt.Sprintf("ID: %v, Addr: %v", "Port: %v", c.ID, c.Addr, c.Ports)
-}
-
 func isPortUsed(port string) bool {
 	for _, node := range Clients_Map {
 		if node.Port == port {
@@ -157,7 +152,7 @@ func getDownloadPorts(fileName string) []string {
 	values, found := FilesLookupTable.Get(fileName)
 	if found {
 		for _, v := range values {
-			downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addr[0])
+			downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addrs[0])
 		}
 	}
 	return downloadPorts
@@ -174,8 +169,8 @@ func getRandomPort(portType int) string {
 	ports := []string{}
 	for _, node := range DataNodes_Map {
 		// check if port is not used
-		if !isPortUsed(node.Addr[portType]) {
-			ports = append(ports, node.Addr[portType])
+		if !isPortUsed(node.Addrs[portType]) {
+			ports = append(ports, node.Addrs[portType])
 		}
 	}
 	// choose radom port
