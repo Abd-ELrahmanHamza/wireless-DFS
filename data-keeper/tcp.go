@@ -132,13 +132,13 @@ func handleDownload(conn net.Conn) {
 	filename := string(filenameBytes)
 	println("Received filename: ", filename)
 
-	// Send confirmation to the client
-	confirmation := "Server ready for download operation"
-	_, err = conn.Write([]byte(confirmation))
-	if err != nil {
-		fmt.Println("Error sending confirmation:", err.Error())
-		return
-	}
+	// // Send confirmation to the client
+	// confirmation := "Server ready for download operation"
+	// _, err = conn.Write([]byte(confirmation))
+	// if err != nil {
+	// 	fmt.Println("Error sending confirmation:", err.Error())
+	// 	return
+	// }
 
 	filename = dataKeeperInfo.Directory + "/" + filename
 	println("Downloading file: ", filename)

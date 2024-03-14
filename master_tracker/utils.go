@@ -176,7 +176,9 @@ func getDownloadPorts(fileName string) []string {
 	values, found := FilesLookupTable.Get(fileName)
 	if found {
 		for _, v := range values {
-			downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD])
+			if v.(*lookupEntry).DataKeeperNode.isAlive() {
+				downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD])
+			}
 		}
 	}
 	return downloadPorts
@@ -193,7 +195,7 @@ func getRandomPort(portType int) string {
 	ports := []string{}
 	for _, node := range DataNodes_Map {
 		// check if port is not used
-		if !isPortUsed(node.Addrs[portType]) {
+		if node.isAlive() && !isPortUsed(node.Addrs[portType]) {
 			ports = append(ports, node.Addrs[portType])
 		}
 	}
