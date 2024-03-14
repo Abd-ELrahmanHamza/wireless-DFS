@@ -58,7 +58,11 @@ func (s *TrackerServer) SendingFinished(ctx context.Context, req *pb.SendingFini
 		nodes_to_replicate_to := chooseRandomNode([]*DataNode{dnode}, 2)
 		for _, node := range nodes_to_replicate_to {
 			log.Println("Replicating to: ", node)
-			replicate(dnode.Addrs[1], node.Addrs[2], req.GetFilePath())
+			filePath := replicate(dnode.Addrs[1], node.Addrs[2], req.GetFilePath())
+			if filePath != "" {
+				FilesLookupTable.Put(req.GetFileName(), &lookupEntry{node, filePath})
+			}
+
 		}
 	} else {
 		log.Println("DataKeeperNode with ID: ", dk_id, " is not in the lookup table")

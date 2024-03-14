@@ -77,7 +77,7 @@ func chooseRandomNode(exceptNodes []*DataNode, N int) []*DataNode {
 	}
 
 	// Ensure we have enough available nodes to meet the request.
-	if len(availableNodes) < N {
+	if len(availableNodes) == 0 {
 		log.Println("No available nodes to Replicate To")
 		return nil
 	} else {
@@ -93,22 +93,22 @@ func chooseRandomNode(exceptNodes []*DataNode, N int) []*DataNode {
 	return availableNodes[:N]
 }
 
-func replicate(srcDownAddr string, dstGrpcAddr string, file_name string) error {
+func replicate(srcDownAddr string, dstGrpcAddr string, file_name string) string {
 	conn, err := grpc.Dial(dstGrpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		fmt.Println("did not connect:", err)
-		return err
+		return ""
 	}
 	defer conn.Close()
 	c := dkpb.NewDataKeeperServiceClient(conn)
 	ok, err := c.ReplicateFile(context.Background(),
 		&dkpb.ReplicateRequest{FileName: file_name, SrcDkAddr: srcDownAddr})
-	if err != nil || !ok.Ok {
+	if err != nil {
 		fmt.Println("Error in ReplicateFile: ", err)
-		return err
+		return ""
 	}
 	// add the file to the lookup table
-	return nil
+	return ok.FilePath
 }
 
 func sendSuccessToClient(cl_id int32) {
@@ -145,8 +145,10 @@ func check_replications_goRoutine() {
 				for _, node := range chosenNodes {
 					// src: DownloadPort of src node
 					// dst: Grpc port of dst node
-					replicate(DNss[0].Addrs[1], node.Addrs[2], file_name.(string))
-
+					filePath := replicate(DNss[0].Addrs[1], node.Addrs[2], file_name.(string))
+					if filePath != "" {
+						FilesLookupTable.Put(file_name, &lookupEntry{node, filePath})
+					}
 				}
 			}
 		}
