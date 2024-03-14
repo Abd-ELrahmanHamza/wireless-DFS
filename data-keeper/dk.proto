@@ -13,6 +13,6 @@ message ReplicateResponse{
     bool ok = 1;
 }
 
-service MP4Service {
+service DataKeeperService {
     rpc ReplicateFile(ReplicateRequest)  returns (ReplicateResponse);
 }

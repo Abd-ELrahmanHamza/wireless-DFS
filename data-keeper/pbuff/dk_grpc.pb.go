@@ -19,89 +19,89 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	MP4Service_ReplicateFile_FullMethodName = "/dfs.MP4Service/ReplicateFile"
+	DataKeeperService_ReplicateFile_FullMethodName = "/dfs.DataKeeperService/ReplicateFile"
 )
 
-// MP4ServiceClient is the client API for MP4Service service.
+// DataKeeperServiceClient is the client API for DataKeeperService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type MP4ServiceClient interface {
+type DataKeeperServiceClient interface {
 	ReplicateFile(ctx context.Context, in *ReplicateRequest, opts ...grpc.CallOption) (*ReplicateResponse, error)
 }
 
-type mP4ServiceClient struct {
+type dataKeeperServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewMP4ServiceClient(cc grpc.ClientConnInterface) MP4ServiceClient {
-	return &mP4ServiceClient{cc}
+func NewDataKeeperServiceClient(cc grpc.ClientConnInterface) DataKeeperServiceClient {
+	return &dataKeeperServiceClient{cc}
 }
 
-func (c *mP4ServiceClient) ReplicateFile(ctx context.Context, in *ReplicateRequest, opts ...grpc.CallOption) (*ReplicateResponse, error) {
+func (c *dataKeeperServiceClient) ReplicateFile(ctx context.Context, in *ReplicateRequest, opts ...grpc.CallOption) (*ReplicateResponse, error) {
 	out := new(ReplicateResponse)
-	err := c.cc.Invoke(ctx, MP4Service_ReplicateFile_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, DataKeeperService_ReplicateFile_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// MP4ServiceServer is the server API for MP4Service service.
-// All implementations must embed UnimplementedMP4ServiceServer
+// DataKeeperServiceServer is the server API for DataKeeperService service.
+// All implementations must embed UnimplementedDataKeeperServiceServer
 // for forward compatibility
-type MP4ServiceServer interface {
+type DataKeeperServiceServer interface {
 	ReplicateFile(context.Context, *ReplicateRequest) (*ReplicateResponse, error)
-	mustEmbedUnimplementedMP4ServiceServer()
+	mustEmbedUnimplementedDataKeeperServiceServer()
 }
 
-// UnimplementedMP4ServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedMP4ServiceServer struct {
+// UnimplementedDataKeeperServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedDataKeeperServiceServer struct {
 }
 
-func (UnimplementedMP4ServiceServer) ReplicateFile(context.Context, *ReplicateRequest) (*ReplicateResponse, error) {
+func (UnimplementedDataKeeperServiceServer) ReplicateFile(context.Context, *ReplicateRequest) (*ReplicateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReplicateFile not implemented")
 }
-func (UnimplementedMP4ServiceServer) mustEmbedUnimplementedMP4ServiceServer() {}
+func (UnimplementedDataKeeperServiceServer) mustEmbedUnimplementedDataKeeperServiceServer() {}
 
-// UnsafeMP4ServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to MP4ServiceServer will
+// UnsafeDataKeeperServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DataKeeperServiceServer will
 // result in compilation errors.
-type UnsafeMP4ServiceServer interface {
-	mustEmbedUnimplementedMP4ServiceServer()
+type UnsafeDataKeeperServiceServer interface {
+	mustEmbedUnimplementedDataKeeperServiceServer()
 }
 
-func RegisterMP4ServiceServer(s grpc.ServiceRegistrar, srv MP4ServiceServer) {
-	s.RegisterService(&MP4Service_ServiceDesc, srv)
+func RegisterDataKeeperServiceServer(s grpc.ServiceRegistrar, srv DataKeeperServiceServer) {
+	s.RegisterService(&DataKeeperService_ServiceDesc, srv)
 }
 
-func _MP4Service_ReplicateFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _DataKeeperService_ReplicateFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReplicateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MP4ServiceServer).ReplicateFile(ctx, in)
+		return srv.(DataKeeperServiceServer).ReplicateFile(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: MP4Service_ReplicateFile_FullMethodName,
+		FullMethod: DataKeeperService_ReplicateFile_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MP4ServiceServer).ReplicateFile(ctx, req.(*ReplicateRequest))
+		return srv.(DataKeeperServiceServer).ReplicateFile(ctx, req.(*ReplicateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// MP4Service_ServiceDesc is the grpc.ServiceDesc for MP4Service service.
+// DataKeeperService_ServiceDesc is the grpc.ServiceDesc for DataKeeperService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var MP4Service_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "dfs.MP4Service",
-	HandlerType: (*MP4ServiceServer)(nil),
+var DataKeeperService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "dfs.DataKeeperService",
+	HandlerType: (*DataKeeperServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "ReplicateFile",
-			Handler:    _MP4Service_ReplicateFile_Handler,
+			Handler:    _DataKeeperService_ReplicateFile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
