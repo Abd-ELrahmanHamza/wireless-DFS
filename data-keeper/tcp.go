@@ -153,7 +153,7 @@ func handleDownload(conn net.Conn) {
 }
 
 func uploadServer(port string, masterTrackerService masterPb.TrackerServiceClient) {
-	listener, err := net.Listen("tcp", "localhost:"+port)
+	listener, err := net.Listen("tcp", IPAddress+port)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		return
@@ -176,7 +176,7 @@ func uploadServer(port string, masterTrackerService masterPb.TrackerServiceClien
 }
 
 func downloadServer(port string) {
-	listener, err := net.Listen("tcp", "localhost:"+port)
+	listener, err := net.Listen("tcp", IPAddress+port)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		return

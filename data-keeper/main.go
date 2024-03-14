@@ -14,6 +14,7 @@ import (
 )
 
 var masterAddr = "localhost:8000"
+var IPAddress string = "localhost:"
 
 // create a struct to hold data keeper information
 type DataKeeper struct {
@@ -40,7 +41,7 @@ func initialize() (int32, masterPb.TrackerServiceClient, *grpc.ClientConn) {
 	}
 	// defer conn.Close()
 	c := masterPb.NewTrackerServiceClient(conn)
-	initialDataResponse, err := c.SendInitalData(context.Background(), &masterPb.InitialDataRequest{DK_Addrs: []string{"localhost:" + dataKeeperInfo.UploadPort, "localhost:" + dataKeeperInfo.DownloadPort, "localhost:" + dataKeeperInfo.GrpcPort}})
+	initialDataResponse, err := c.SendInitalData(context.Background(), &masterPb.InitialDataRequest{DK_Addrs: []string{IPAddress + dataKeeperInfo.UploadPort, IPAddress + dataKeeperInfo.DownloadPort, IPAddress + dataKeeperInfo.GrpcPort}})
 	if err != nil {
 		log.Println("Error:", err)
 		return 0, nil, nil

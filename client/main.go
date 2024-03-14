@@ -59,7 +59,7 @@ func RequestUpload(file *os.File, conn *grpc.ClientConn) string {
 func SendFileName2DK(conn net.Conn, file *os.File) {
 	fileName := file.Name()
 	fileNameLength := len(fileName)
-	err0 := binary.Write(conn, binary.LittleEndian, int32(fileNameLength))
+	err0 := binary.Write(conn, binary.BigEndian, int32(fileNameLength))
 	if err0 != nil {
 		log.Fatalf("Failed to write: %v", err0)
 	}
@@ -80,7 +80,7 @@ func SendFile2DK(address string, file *os.File) {
 		}
 	}(conn)
 	// send client id
-	err3 := binary.Write(conn, binary.LittleEndian, ID)
+	err3 := binary.Write(conn, binary.BigEndian, ID)
 	if err3 != nil {
 		log.Fatalf("Failed to write: %v", err3)
 	}
@@ -91,7 +91,7 @@ func SendFile2DK(address string, file *os.File) {
 		log.Fatalf("Failed to get file info: %v", err)
 	}
 	fileSize := fileInfo.Size()
-	err2 := binary.Write(conn, binary.LittleEndian, fileSize)
+	err2 := binary.Write(conn, binary.BigEndian, fileSize)
 	if err2 != nil {
 		log.Fatalf("Failed to write: %v", err2)
 	}
