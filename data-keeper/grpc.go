@@ -41,13 +41,13 @@ func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.Replicate
 	}
 
 	// Receive server response
-	response := make([]byte, 1024)
-	n, err := conn.Read(response)
-	if err != nil {
-		fmt.Println("Error receiving response:", err.Error())
-		return &pb.ReplicateResponse{Ok: false}, nil
-	}
-	fmt.Println("Server response:", string(response[:n]))
+	// response := make([]byte, 1024)
+	// n, err := conn.Read(response)
+	// if err != nil {
+	// 	fmt.Println("Error receiving response:", err.Error())
+	// 	return &pb.ReplicateResponse{Ok: false}, nil
+	// }
+	// fmt.Println("Server response:", string(response[:n]))
 
 	// Create a new file to write the downloaded data
 	// directory := getDirectory(conn)
