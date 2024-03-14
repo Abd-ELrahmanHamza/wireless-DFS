@@ -39,7 +39,7 @@ func (s *TrackerServer) SendInitalData(ctx context.Context, req *pb.InitialDataR
 	log.Println("DataKeeperNode ID: ", d_id)
 	// add the data keeper node to the Nodes table
 	DataNodes_Map[d_id] = &DataNode{d_id, dk_addresses, time.Now()}
-	return &pb.InitialDataResponse{DK_ID: nodesCounter()}, nil
+	return &pb.InitialDataResponse{DK_ID: d_id}, nil
 }
 
 func (s *TrackerServer) SendingFinished(ctx context.Context, req *pb.SendingFinishedRequest) (*pb.SendingFinishedResponse, error) {

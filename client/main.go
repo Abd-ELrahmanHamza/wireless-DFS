@@ -5,7 +5,6 @@ import (
 	masterPb "client/master_tracker"
 	"context"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -15,7 +14,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-var CLIENT_ADDRESS string = "localhost:5000"
+var CLIENT_ADDRESS string = "localhost:9000"
 var MASTER_ADDRESS string = "localhost:8000"
 var ID int32 = -1
 
@@ -156,7 +155,7 @@ func DownloadFile(conn net.Conn, fileName string) {
 func main() {
 	// client works as a server to receive the completion message from the server
 	lis, err := net.Listen("tcp", CLIENT_ADDRESS)
-	log.Println(fmt.Sprintf("Client is listening on %s", CLIENT_ADDRESS))
+	log.Printf("Client is listening on %s", CLIENT_ADDRESS)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
@@ -180,11 +179,10 @@ func main() {
 
 	if mode == "upload" {
 		// Request upload
-		port := RequestUpload(file, conn)
-		log.Printf("Received port: %d", port)
-
+		Addr := RequestUpload(file, conn)
+		log.Printf("Received Address: %s", Addr)
 		// Send file to dk
-		SendFile2DK(port, file)
+		SendFile2DK(Addr, file)
 
 		s := grpc.NewServer()
 		clientPb.RegisterClientServiceServer(s, &MP4Checker{})
@@ -195,7 +193,7 @@ func main() {
 		// Request download
 		addresses := GetDataKeepersAddresses(conn, filePath)
 		address := SelectDK(addresses)
-		log.Printf("Received address: %d", address)
+		log.Printf("Received address: %s", address)
 
 		// Connect to the data keeper
 		connDK, errDK := net.Dial("tcp", address)
