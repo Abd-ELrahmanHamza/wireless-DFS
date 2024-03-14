@@ -15,7 +15,7 @@ var (
 
 func main() {
 	// create a lookup table of file names and their corresponding data keeper nodes with the file name as the key
-	FilesLookupTable.Put("file2", &lookupEntry{&DataNode{3, "localhost:8083", time.Now()}, "file2"})
+	FilesLookupTable.Put("file1", &lookupEntry{&DataNode{1, []string{"localhost:50051", "localhost:50052", "localhost:50053"}, time.Now()}, "path/to/file1"})
 	log.Println(FilesLookupTable.Get("file2"))
 	for _, v := range FilesLookupTable.KeySet() {
 		log.Println(v.(string))

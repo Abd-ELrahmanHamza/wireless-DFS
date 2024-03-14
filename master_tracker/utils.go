@@ -17,13 +17,13 @@ import (
 
 type DataNode struct {
 	ID            int32
-	Addr          string // IP:Port
+	Addrs         []string // IP:Port
 	LastPingstamp time.Time
 }
 
 // String function for DataNode
 func (d *DataNode) String() string {
-	return fmt.Sprintf("ID: %v, Addr: %v", d.ID, d.Addr)
+	return fmt.Sprintf("ID: %v, Addr: %v", d.ID, d.Addrs)
 }
 func (d *DataNode) isAlive() bool {
 	return time.Since(d.LastPingstamp) < time.Second
@@ -108,14 +108,15 @@ func check_replications_goRoutine() {
 				}
 				// replicate the file to the chosen data keeper nodes
 				for _, node := range chosenNodes {
-					conn, err := grpc.Dial(node.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+					conn, err := grpc.Dial(node.Addrs[2], grpc.WithTransportCredentials(insecure.NewCredentials()))
 					if err != nil {
 						fmt.Println("did not connect:", err)
 						return
 					}
 					defer conn.Close()
 					c := dkpb.NewDataKeeperServiceClient(conn)
-					c.ReplicateFile(context.Background(), &dkpb.ReplicateRequest{FileName: file_name.(string), Port: chosenNodes[0].Addr})
+					c.ReplicateFile(context.Background(),
+						&dkpb.ReplicateRequest{FileName: file_name.(string), SrcDkAddr: chosenNodes[0].Addrs[0]})
 				}
 			}
 		}
