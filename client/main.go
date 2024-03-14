@@ -12,6 +12,10 @@ import (
 	"os"
 )
 
+var CLIENT_PORT int32 = 5000
+var MASTER_PORT int32 = 8000
+var HOST string = "localhost"
+
 func OpenFile(path string) *os.File {
 	file, err := os.Open(path)
 	if err != nil {
@@ -28,7 +32,7 @@ func CreateUploadRequest(file *os.File) *pb.UploadRequest {
 	return &pb.UploadRequest{Size: int32(fileInfo.Size()), Port: 5000}
 }
 
-func RequestPort(req *pb.UploadRequest, client pb.MP4ServiceClient) int32 {
+func RequestPort(req *pb.UploadRequest, client pb.MasterServiceClient) int32 {
 	res, err := client.Upload(context.Background(), req)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
@@ -39,7 +43,7 @@ func RequestPort(req *pb.UploadRequest, client pb.MP4ServiceClient) int32 {
 
 func RequestUpload(file *os.File, conn *grpc.ClientConn) int32 {
 	// Create Client
-	client := pb.NewMP4ServiceClient(conn)
+	client := pb.NewMasterServiceClient(conn)
 
 	// Create Upload Request
 	req := CreateUploadRequest(file)
@@ -51,7 +55,7 @@ func RequestUpload(file *os.File, conn *grpc.ClientConn) int32 {
 }
 
 func SendFile2DK(port int32, file *os.File) {
-	conn, err := net.Dial("tcp", fmt.Sprintf("localhost:%d", port))
+	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", HOST, port))
 	if err != nil {
 		log.Fatalf("Failed to connect: %v", err)
 	}
@@ -69,7 +73,7 @@ func SendFile2DK(port int32, file *os.File) {
 }
 
 type MP4Checker struct {
-	pb.UnimplementedMP4ServiceServer
+	pb.UnimplementedClientServiceServer
 }
 
 func (s *MP4Checker) UploadingCompletion(ctx context.Context, req *pb.UploadingCompletionRequest) (*pb.UploadingCompletionResponse, error) {
@@ -80,7 +84,7 @@ func (s *MP4Checker) UploadingCompletion(ctx context.Context, req *pb.UploadingC
 }
 func GetDataKeepersPorts(conn *grpc.ClientConn, name string) []int32 {
 	// Create Client
-	client := pb.NewMP4ServiceClient(conn)
+	client := pb.NewMasterServiceClient(conn)
 	// Create Download Request
 	req := &pb.DownloadRequest{Name: name}
 	res, err := client.Download(context.Background(), req)
@@ -118,14 +122,14 @@ func DownloadFile(conn net.Conn) {
 
 func main() {
 	// client works as a server to receive the completion message from the server
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", 5000))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", CLIENT_PORT))
 	log.Println("Client starts listening on port 5000...")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
 	// Connect to the server
-	conn, err2 := grpc.Dial("localhost:8080", grpc.WithInsecure(), grpc.WithBlock())
+	conn, err2 := grpc.Dial(fmt.Sprintf("%s:%d", HOST, MASTER_PORT), grpc.WithInsecure(), grpc.WithBlock())
 	if err2 != nil {
 		log.Fatalf("Failed to connect: %v", err2)
 	}
@@ -150,7 +154,7 @@ func main() {
 		SendFile2DK(port, file)
 
 		s := grpc.NewServer()
-		pb.RegisterMP4ServiceServer(s, &MP4Checker{})
+		pb.RegisterClientServiceServer(s, &MP4Checker{})
 		if err4 := s.Serve(lis); err4 != nil {
 			log.Fatalf("Failed to serve: %v", err4)
 		}

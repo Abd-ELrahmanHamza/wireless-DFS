@@ -23,8 +23,11 @@ message DownloadResponse {
     repeated int32 ports = 1;
 }
 
-service MP4Service {
+service MasterService {
     rpc Upload(UploadRequest) returns (UploadResponse);
-    rpc UploadingCompletion(UploadingCompletionRequest) returns (UploadingCompletionResponse);
     rpc Download(DownloadRequest) returns (DownloadResponse);
+}
+
+service ClientService {
+    rpc UploadingCompletion(UploadingCompletionRequest) returns (UploadingCompletionResponse);
 }
