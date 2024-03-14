@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	dkpb "dfs/data-keeper/gen"
+	dkpb "dfs/data-keeper/pbuff"
 	pb "dfs/master_tracker/pbuff"
 	"fmt"
 	"math/rand"
@@ -114,7 +114,7 @@ func check_replications_goRoutine() {
 						return
 					}
 					defer conn.Close()
-					c := dkpb.NewMP4ServiceClient(conn)
+					c := dkpb.NewDataKeeperServiceClient(conn)
 					c.ReplicateFile(context.Background(), &dkpb.ReplicateRequest{FileName: file_name.(string), Port: chosenNodes[0].Addr})
 				}
 			}
