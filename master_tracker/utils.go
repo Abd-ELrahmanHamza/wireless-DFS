@@ -77,8 +77,11 @@ func chooseRandomNode(exceptNodes []*DataNode, N int) []*DataNode {
 	}
 
 	// Ensure we have enough available nodes to meet the request.
-	if len(availableNodes) < N {
+	if len(availableNodes) == 0 {
+		log.Println("No available nodes to Replicate To")
 		return nil
+	} else {
+		log.Println("Files are being Replicated To", availableNodes)
 	}
 
 	// Randomly shuffle the available nodes.
