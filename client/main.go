@@ -122,7 +122,7 @@ func DownloadFile(conn net.Conn) {
 
 func main() {
 	// client works as a server to receive the completion message from the server
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", CLIENT_PORT))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", HOST, CLIENT_PORT))
 	log.Println("Client starts listening on port 5000...")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
