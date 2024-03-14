@@ -32,21 +32,21 @@ var dataKeeperInfo DataKeeper = DataKeeper{
 	id:           0,
 }
 
-func initialize() (int32, masterPb.TrackerServiceClient) {
+func initialize() (int32, masterPb.TrackerServiceClient, *grpc.ClientConn) {
 	conn, err := grpc.Dial(masterAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		fmt.Println("did not connect:", err)
-		return 0, nil
+		return 0, nil, nil
 	}
 	// defer conn.Close()
 	c := masterPb.NewTrackerServiceClient(conn)
 	initialDataResponse, err := c.SendInitalData(context.Background(), &masterPb.InitialDataRequest{DK_Addrs: []string{"localhost:" + dataKeeperInfo.UploadPort, "localhost:" + dataKeeperInfo.DownloadPort, "localhost:" + dataKeeperInfo.GrpcPort}})
 	if err != nil {
 		log.Println("Error:", err)
-		return 0, nil
+		return 0, nil, nil
 	}
 	// c.PingMe(context.Background(), &masterPb.PingRequest{DK_ID: int32(initialDataResponse.DK_ID)})
-	return initialDataResponse.DK_ID, c
+	return initialDataResponse.DK_ID, c, conn
 }
 
 func pingMaster(masterTrackerService masterPb.TrackerServiceClient) {
@@ -93,7 +93,8 @@ func main() {
 	}
 	fmt.Println("DataKeeper:", dataKeeperInfo)
 
-	id, masterTrackerService := initialize()
+	id, masterTrackerService, masterConnection := initialize()
+	defer masterConnection.Close()
 	dataKeeperInfo.id = id
 	go pingMaster(masterTrackerService)
 	go uploadServer(dataKeeperInfo.UploadPort, masterTrackerService)
