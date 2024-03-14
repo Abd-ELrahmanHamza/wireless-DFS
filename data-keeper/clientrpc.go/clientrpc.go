@@ -17,7 +17,7 @@ func main() {
 	c := pb.NewDataKeeperServiceClient(conn)
 
 	// Replicate file
-	replicateResponse, err := c.ReplicateFile(context.Background(), &pb.ReplicateRequest{FileName: "example.mp4", Port: "8081"})
+	replicateResponse, err := c.ReplicateFile(context.Background(), &pb.ReplicateRequest{FileName: "example.mp4", SrcDkAddr: "8081"})
 	if err != nil {
 		fmt.Println("Error calling ReplicateFile:", err)
 		return
