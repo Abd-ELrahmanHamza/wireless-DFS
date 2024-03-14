@@ -16,6 +16,8 @@ type dataKeeperService struct {
 	pb.UnimplementedDataKeeperServiceServer
 }
 
+var directory string
+
 func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.ReplicateRequest) (*pb.ReplicateResponse, error) {
 	println("Replicating file: ", req.FileName, " to port: ", req.Port)
 	conn, err := net.Dial("tcp", "localhost:"+req.Port)
@@ -42,7 +44,8 @@ func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.Replicate
 	fmt.Println("Server response:", string(response[:n]))
 
 	// Create a new file to write the downloaded data
-	file, err := os.Create(req.FileName)
+	// directory := getDirectory(conn)
+	file, err := os.Create(directory + "/" + req.FileName)
 	if err != nil {
 		fmt.Println("Error creating file:", err)
 		return &pb.ReplicateResponse{Ok: false}, nil
@@ -102,6 +105,7 @@ func handleConnection(conn net.Conn) {
 }
 
 func handleUpload(conn net.Conn, filename string) {
+	filename = directory + "/" + filename
 	// Create a new file to write the uploaded data
 	file, err := os.Create(filename)
 	if err != nil {
@@ -121,6 +125,8 @@ func handleUpload(conn net.Conn, filename string) {
 }
 
 func handleDownload(conn net.Conn, filename string) {
+	filename = directory + "/" + filename
+	println("Downloading file: ", filename)
 	// Open the requested file
 	file, err := os.Open(filename)
 	if err != nil {
@@ -139,7 +145,7 @@ func handleDownload(conn net.Conn, filename string) {
 	fmt.Println("File sent successfully:", filename)
 }
 
-func handleGrpc(rpcListener net.Listener, s *grpc.Server){
+func handleGrpc(rpcListener net.Listener, s *grpc.Server) {
 	if err := s.Serve(rpcListener); err != nil {
 		fmt.Println("failed to serve:", err)
 	}
@@ -172,6 +178,15 @@ func main() {
 	go handleGrpc(rpcListener, s)
 	fmt.Println("Server started. Listening on port " + port + "...")
 
+	// Construct the directory path based on the port number
+	directory = "./files/" + port
+
+	// Create the directory if it doesn't exist
+	err = os.MkdirAll(directory, 0755)
+	if err != nil {
+		fmt.Println("Error creating directory:", err)
+		return
+	}
 	// Accept incoming connections
 	for {
 		conn, err := listener.Accept()

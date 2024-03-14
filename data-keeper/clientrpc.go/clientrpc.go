@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	conn, err := grpc.Dial("localhost:8081", grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:5001", grpc.WithInsecure())
 	if err != nil {
 		fmt.Println("did not connect:", err)
 		return
@@ -17,7 +17,7 @@ func main() {
 	c := pb.NewDataKeeperServiceClient(conn)
 
 	// Replicate file
-	replicateResponse, err := c.ReplicateFile(context.Background(), &pb.ReplicateRequest{FileName: "downloaded.mp4", Port: "5000"})
+	replicateResponse, err := c.ReplicateFile(context.Background(), &pb.ReplicateRequest{FileName: "example.mp4", Port: "8080"})
 	if err != nil {
 		fmt.Println("Error calling ReplicateFile:", err)
 		return
