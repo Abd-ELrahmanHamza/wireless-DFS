@@ -77,7 +77,7 @@ func chooseRandomNode(exceptNodes []*DataNode, N int) []*DataNode {
 	}
 
 	// Ensure we have enough available nodes to meet the request.
-	if len(availableNodes) == 0 {
+	if len(availableNodes) < N {
 		log.Println("No available nodes to Replicate To")
 		return nil
 	} else {
