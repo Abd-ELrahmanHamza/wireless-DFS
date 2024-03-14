@@ -17,13 +17,13 @@ import (
 
 type DataNode struct {
 	ID            int32
-	Addr          string // IP:Port
+	Addrs         []string // IP:Port
 	LastPingstamp time.Time
 }
 
 // String function for DataNode
 func (d *DataNode) String() string {
-	return fmt.Sprintf("ID: %v, Addr: %v", d.ID, d.Addr)
+	return fmt.Sprintf("ID: %v, Addr: %v", d.ID, d.Addrs)
 }
 func (d *DataNode) isAlive() bool {
 	return time.Since(d.LastPingstamp) < time.Second
@@ -87,6 +87,18 @@ func chooseRandomNode(exceptNodes []*DataNode, N int) []*DataNode {
 	return availableNodes[:N]
 }
 
+func replicate(srcDownAddr string, dstGrpcAddr string, file_name string) {
+	conn, err := grpc.Dial(dstGrpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		fmt.Println("did not connect:", err)
+		return
+	}
+	defer conn.Close()
+	c := dkpb.NewDataKeeperServiceClient(conn)
+	c.ReplicateFile(context.Background(),
+		&dkpb.ReplicateRequest{FileName: file_name, SrcDkAddr: srcDownAddr})
+}
+
 func check_replications_goRoutine() {
 	// every 10 secodns, check if every file has at least 3 replications and if not, replicate the file to another data keeper node
 	for {
@@ -108,14 +120,9 @@ func check_replications_goRoutine() {
 				}
 				// replicate the file to the chosen data keeper nodes
 				for _, node := range chosenNodes {
-					conn, err := grpc.Dial(node.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-					if err != nil {
-						fmt.Println("did not connect:", err)
-						return
-					}
-					defer conn.Close()
-					c := dkpb.NewDataKeeperServiceClient(conn)
-					c.ReplicateFile(context.Background(), &dkpb.ReplicateRequest{FileName: file_name.(string), Port: chosenNodes[0].Addr})
+					// src: DownloadPort of src node
+					// dst: Grpc port of dst node
+					replicate(DNss[0].Addrs[0], node.Addrs[2], file_name.(string))
 				}
 			}
 		}
