@@ -4,6 +4,7 @@ import (
 	clientPb "client/client_service"
 	masterPb "client/master_tracker"
 	"context"
+	"encoding/binary"
 	"fmt"
 	"google.golang.org/grpc"
 	"io"
@@ -67,8 +68,28 @@ func SendFile2DK(address string, file *os.File) {
 			log.Fatalf("Failed to close connection: %v", err2)
 		}
 	}(conn)
+	fileName := file.Name()
+	fileNameLength := len(fileName)
+	err0 := binary.Write(conn, binary.LittleEndian, int32(fileNameLength))
+	if err0 != nil {
+		log.Fatalf("Failed to write: %v", err0)
+	}
+	_, err1 := conn.Write([]byte(fileName))
+	if err1 != nil {
+		log.Fatalf("Failed to write: %v", err1)
+	}
+	// send file size
+	fileInfo, err := file.Stat()
+	if err != nil {
+		log.Fatalf("Failed to get file info: %v", err)
+	}
+	fileSize := fileInfo.Size()
+	err2 := binary.Write(conn, binary.LittleEndian, fileSize)
+	if err2 != nil {
+		log.Fatalf("Failed to write: %v", err2)
+	}
 	// send file from client to server
-	_, err = io.Copy(conn, file)
+	_, err = io.CopyN(conn, file, fileSize)
 	if err != nil {
 		log.Fatalf("Failed to send file: %v", err)
 	}
