@@ -9,7 +9,7 @@ message ReplicateRequest {
   string file_name = 2;
 }
 
-message ReplicateResponse { bool ok = 1; }
+message ReplicateResponse { string filePath = 1; }
 
 service DataKeeperService {
   rpc ReplicateFile(ReplicateRequest) returns (ReplicateResponse);
