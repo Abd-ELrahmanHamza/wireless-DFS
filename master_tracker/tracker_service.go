@@ -47,9 +47,13 @@ func sendingFinished(ctx context.Context, req *pb.SendingFinishedRequest) (*pb.S
 	// check if the data keeper node is in the lookup table
 	if dnode, ok := DataNodes_Map[dk_id]; ok {
 		// update the last ping time
-		// TODO : SEND TO CLIENT THAT FILE IS READY
+		// TODO : SEND TO CLIENT THAT FILE IS READY AND REplicate it
 		FilesLookupTable.Put(req.GetFileName(), &lookupEntry{dnode, req.GetFilePath()})
-
+		nodes_to_replicate_to := chooseRandomNode([]*DataNode{dnode}, 2)
+		for _, node := range nodes_to_replicate_to {
+			log.Println("Replicating to: ", node)
+			replicate(dnode.Addrs[0], node.Addrs[2], req.GetFilePath())
+		}
 	} else {
 		log.Println("DataKeeperNode with ID: ", dk_id, " is not in the lookup table")
 		return &pb.SendingFinishedResponse{
