@@ -3,35 +3,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
 	"github.com/jwangsadinata/go-multimap/slicemultimap"
 )
-
-type DataNode struct {
-	ID            int32
-	Addr          string // IP:Port
-	LastPingstamp time.Time
-}
-
-// String function for DataNode
-func (d *DataNode) String() string {
-	return fmt.Sprintf("ID: %v, Addr: %v", d.ID, d.Addr)
-}
-func (d *DataNode) isAlive() bool {
-	return time.Since(d.LastPingstamp) < time.Second
-}
-
-type lookupEntry struct {
-	DataKeeperNode *DataNode
-	filePath       string
-}
-
-// implement print function for lookupTableEntry
-func (l *lookupEntry) String() string {
-	return fmt.Sprintf("DataKeeperNode: %v, fileName: %v, isAlive: %v", l.DataKeeperNode, l.filePath, l.DataKeeperNode.isAlive())
-}
 
 var (
 	FilesLookupTable = slicemultimap.New()       // schema is file name -> lookupEntry
@@ -123,8 +100,15 @@ func main() {
 	FilesLookupTable.Put("file1", &lookupEntry{&DataNode{1, "localhost:8081", time.Now()}, "file1"})
 	FilesLookupTable.Put("file1", &lookupEntry{&DataNode{2, "localhost:8082", time.Now()}, "file1"})
 	fmt.Println(getPorts("file2"))
-
 	// println(nodesCounter())
-	// println(nodesCounter())
+	// create a lookup table of file names and their corresponding data keeper nodes with the file name as the key
+	FilesLookupTable.Put("file2", &lookupEntry{&DataNode{3, "localhost:8083", time.Now()}, "file2"})
+	log.Println(FilesLookupTable.Get("file2"))
+	for _, v := range FilesLookupTable.KeySet() {
+		log.Println(v.(string))
+		d, _ := FilesLookupTable.Get(v)
+		log.Println(d)
+	}
+	println(nodesCounter())
 	// run_grpc()
 }

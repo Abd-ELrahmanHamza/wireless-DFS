@@ -33,7 +33,7 @@ func (s *TrackerServer) PingMe(ctx context.Context, req *pb.PingRequest) (*pb.Pi
 func (s *TrackerServer) sendInitalData(ctx context.Context, req *pb.InitialDataRequest) (*pb.InitialDataResponse, error) {
 	// Make sure each data keeper node is added to the lookup table once on startup
 	// TODO make sure ports are unique
-	d_port := req.GetDK_Port()
+	d_port := req.Ge()
 	d_id := nodesCounter()
 	// add the data keeper node to the Nodes table
 	DataNodes_Map[d_id] = &DataNode{d_id, d_port, time.Now()}
