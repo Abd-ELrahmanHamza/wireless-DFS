@@ -9,7 +9,7 @@ func findThreeAvailablePorts(startPort, endPort int) ([]int, error) {
 	var availablePorts []int
 
 	for port := startPort; port <= endPort; port++ {
-		addr := fmt.Sprintf("localhost:%d", port)
+		addr := fmt.Sprintf("%s%d", IPAddress, port)
 		listener, err := net.Listen("tcp", addr)
 		if err != nil {
 			// Port is not available, continue to the next port

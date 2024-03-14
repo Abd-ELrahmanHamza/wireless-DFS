@@ -61,7 +61,7 @@ func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.Replicate
 
 func grpcServer(port string) {
 	// serve on port + 1
-	rpcListener, err := net.Listen("tcp", ":"+port)
+	rpcListener, err := net.Listen("tcp", IPAddress+port)
 	fmt.Println("GRPC Started. Listening on port:", port)
 	if err != nil {
 		fmt.Println("failed to listen:", err)
@@ -73,4 +73,3 @@ func grpcServer(port string) {
 		fmt.Println("failed to serve:", err)
 	}
 }
-
