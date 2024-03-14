@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	dkpb "dfs/data-keeper/pbuff"
+	clpb "dfs/master_tracker/client_pb"
+
 	pb "dfs/master_tracker/pbuff"
 	"fmt"
+	"log"
 	"math/rand"
 	"net"
 	"slices"
@@ -99,6 +102,17 @@ func replicate(srcDownAddr string, dstGrpcAddr string, file_name string) {
 		&dkpb.ReplicateRequest{FileName: file_name, SrcDkAddr: srcDownAddr})
 }
 
+func sendSuccessToClient(cl_id int32) {
+	Addr := Clients_Map[cl_id].Addr
+	conn, err := grpc.Dial(Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Println("Could not connect to client to send success: ", Addr, " Error: ", err)
+	}
+	defer conn.Close()
+	c := clpb.NewClientServiceClient(conn)
+	c.UploadingCompletion(context.Background(), &clpb.UploadingCompletionRequest{})
+}
+
 func check_replications_goRoutine() {
 	// every 10 secodns, check if every file has at least 3 replications and if not, replicate the file to another data keeper node
 	for {
@@ -122,7 +136,7 @@ func check_replications_goRoutine() {
 				for _, node := range chosenNodes {
 					// src: DownloadPort of src node
 					// dst: Grpc port of dst node
-					replicate(DNss[0].Addrs[0], node.Addrs[2], file_name.(string))
+					replicate(DNss[0].Addrs[1], node.Addrs[2], file_name.(string))
 				}
 			}
 		}

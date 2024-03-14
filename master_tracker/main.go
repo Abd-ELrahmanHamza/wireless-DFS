@@ -12,5 +12,6 @@ var (
 )
 
 func main() {
+	go check_replications_goRoutine()
 	run_grpc()
 }

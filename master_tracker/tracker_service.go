@@ -44,17 +44,21 @@ func (s *TrackerServer) SendInitalData(ctx context.Context, req *pb.InitialDataR
 
 func (s *TrackerServer) SendingFinished(ctx context.Context, req *pb.SendingFinishedRequest) (*pb.SendingFinishedResponse, error) {
 	dk_id := req.GetDK_ID()
+	cl_id := req.GetClient_ID()
 	// client_id := req.GetClientID()
 	log.Println("Received sending finished signal from: ", dk_id)
 	// check if the data keeper node is in the lookup table
 	if dnode, ok := DataNodes_Map[dk_id]; ok {
 		// update the last ping time
 		// TODO : SEND TO CLIENT THAT FILE IS READY AND REplicate it
+		sendSuccessToClient(cl_id)
+		log.Println("Sending success to client: ", cl_id)
+
 		FilesLookupTable.Put(req.GetFileName(), &lookupEntry{dnode, req.GetFilePath()})
 		nodes_to_replicate_to := chooseRandomNode([]*DataNode{dnode}, 2)
 		for _, node := range nodes_to_replicate_to {
 			log.Println("Replicating to: ", node)
-			replicate(dnode.Addrs[0], node.Addrs[2], req.GetFilePath())
+			replicate(dnode.Addrs[1], node.Addrs[2], req.GetFilePath())
 		}
 	} else {
 		log.Println("DataKeeperNode with ID: ", dk_id, " is not in the lookup table")
