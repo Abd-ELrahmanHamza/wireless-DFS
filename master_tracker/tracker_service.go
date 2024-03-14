@@ -59,3 +59,26 @@ func sendingFinished(ctx context.Context, req *pb.SendingFinishedRequest) (*pb.S
 		OK: true,
 	}, nil
 }
+
+func (s *TrackerServer) UploadFileRequest(ctx context.Context, req *pb.UploadFileRequest) (*pb.UploadFileResponse, error) {
+	c_addr := req.GetClientAddr()
+	filePath := req.GetFilePath()
+	log.Println("Received file upload request for: ", filePath)
+	c_id := nodesCounter()
+	// check if client is not in Clients_map then give it an id and add it to the map
+	uploadAddr := getRandomPort(UPLOAD)
+	Clients_Map[c_id] = &ClientNode{c_id, c_addr, uploadAddr}
+	return &pb.UploadFileResponse{
+		Addr:      uploadAddr,
+		Client_ID: c_id,
+	}, nil
+}
+
+func (s *TrackerServer) downloadFile(ctx context.Context, req *pb.DownloadFileRequest) (*pb.DownloadFileResponse, error) {
+	fileName := req.GetFileName()
+	log.Println("Received file download request for: ", fileName)
+	downloadPorts := getDownloadPorts(fileName)
+	return &pb.DownloadFileResponse{
+		DK_Addresses: downloadPorts,
+	}, nil
+}

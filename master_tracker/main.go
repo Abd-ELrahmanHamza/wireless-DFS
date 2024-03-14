@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	FilesLookupTable = slicemultimap.New()       // schema is file name -> lookupEntry
-	DataNodes_Map    = make(map[int32]*DataNode) // map of data keeper nodes with the data keeper node ID as the key
+	FilesLookupTable = slicemultimap.New()         // schema is file name -> lookupEntry
+	DataNodes_Map    = make(map[int32]*DataNode)   // map of data keeper nodes with the data keeper node ID as the key
+	Clients_Map      = make(map[int32]*ClientNode) // map of client nodes with the client ID as th key
 )
 
 func main() {
