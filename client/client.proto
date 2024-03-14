@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+option go_package= "mp4_service/";
+
+message UploadRequest {
+    int32 size = 1;
+    // client port
+    int32 port = 2;
+}
+
+message UploadResponse {
+    int32 port = 1;
+}
+message UploadingCompletionRequest{}
+message UploadingCompletionResponse{}
+
+message DownloadRequest {
+    string name = 2;
+}
+
+message DownloadResponse {
+    // list of 3 ports
+    repeated int32 ports = 1;
+}
+
+service MasterService {
+    rpc Upload(UploadRequest) returns (UploadResponse);
+    rpc Download(DownloadRequest) returns (DownloadResponse);
+}
+
+service ClientService {
+    rpc UploadingCompletion(UploadingCompletionRequest) returns (UploadingCompletionResponse);
+}
