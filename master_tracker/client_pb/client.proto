@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option go_package = "client_service/";
+
+message UploadingCompletionRequest {}
+message UploadingCompletionResponse {}
+
+service ClientService {
+  rpc UploadingCompletion(UploadingCompletionRequest)
+      returns (UploadingCompletionResponse);
+}
