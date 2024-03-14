@@ -30,9 +30,10 @@ func (s *TrackerServer) PingMe(ctx context.Context, req *pb.PingRequest) (*pb.Pi
 	}, nil
 }
 
-func (s *TrackerServer) sendInitalData(ctx context.Context, req *pb.InitialDataRequest) (*pb.InitialDataResponse, error) {
+func (s *TrackerServer) SendInitalData(ctx context.Context, req *pb.InitialDataRequest) (*pb.InitialDataResponse, error) {
 	// Make sure each data keeper node is added to the lookup table once on startup
 	// TODO make sure ports are unique
+	log.Println("Received initial data from: ", req.GetDK_Addrs())
 	dk_addresses := req.GetDK_Addrs()
 	d_id := nodesCounter()
 	// add the data keeper node to the Nodes table
@@ -40,7 +41,7 @@ func (s *TrackerServer) sendInitalData(ctx context.Context, req *pb.InitialDataR
 	return &pb.InitialDataResponse{DK_ID: nodesCounter()}, nil
 }
 
-func sendingFinished(ctx context.Context, req *pb.SendingFinishedRequest) (*pb.SendingFinishedResponse, error) {
+func (s *TrackerServer) SendingFinished(ctx context.Context, req *pb.SendingFinishedRequest) (*pb.SendingFinishedResponse, error) {
 	dk_id := req.GetDK_ID()
 	// client_id := req.GetClientID()
 	log.Println("Received sending finished signal from: ", dk_id)
@@ -65,7 +66,7 @@ func sendingFinished(ctx context.Context, req *pb.SendingFinishedRequest) (*pb.S
 	}, nil
 }
 
-func (s *TrackerServer) UploadFileRequest(ctx context.Context, req *pb.UploadFileRequest) (*pb.UploadFileResponse, error) {
+func (s *TrackerServer) UploadFile(ctx context.Context, req *pb.UploadFileRequest) (*pb.UploadFileResponse, error) {
 	c_addr := req.GetClientAddr()
 	filePath := req.GetFilePath()
 	log.Println("Received file upload request for: ", filePath)
@@ -79,7 +80,7 @@ func (s *TrackerServer) UploadFileRequest(ctx context.Context, req *pb.UploadFil
 	}, nil
 }
 
-func (s *TrackerServer) downloadFile(ctx context.Context, req *pb.DownloadFileRequest) (*pb.DownloadFileResponse, error) {
+func (s *TrackerServer) DownloadFile(ctx context.Context, req *pb.DownloadFileRequest) (*pb.DownloadFileResponse, error) {
 	fileName := req.GetFileName()
 	log.Println("Received file download request for: ", fileName)
 	downloadPorts := getDownloadPorts(fileName)

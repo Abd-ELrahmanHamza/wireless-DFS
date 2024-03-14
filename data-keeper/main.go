@@ -4,13 +4,16 @@ import (
 	"context"
 	masterPb "dfs/master_tracker/pbuff"
 	"fmt"
-	"google.golang.org/grpc"
+	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-var masterAddr = "localhost:5002"
+var masterAddr = "localhost:8000"
 
 // create a struct to hold data keeper information
 type DataKeeper struct {
@@ -30,14 +33,19 @@ var dataKeeperInfo DataKeeper = DataKeeper{
 }
 
 func initialize() (int32, masterPb.TrackerServiceClient) {
-	conn, err := grpc.Dial(masterAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(masterAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		fmt.Println("did not connect:", err)
 		return 0, nil
 	}
-	defer conn.Close()
+	// defer conn.Close()
 	c := masterPb.NewTrackerServiceClient(conn)
 	initialDataResponse, err := c.SendInitalData(context.Background(), &masterPb.InitialDataRequest{DK_Addrs: []string{"localhost:" + dataKeeperInfo.UploadPort, "localhost:" + dataKeeperInfo.DownloadPort, "localhost:" + dataKeeperInfo.GrpcPort}})
+	if err != nil {
+		log.Println("Error:", err)
+		return 0, nil
+	}
+	// c.PingMe(context.Background(), &masterPb.PingRequest{DK_ID: int32(initialDataResponse.DK_ID)})
 	return initialDataResponse.DK_ID, c
 }
 
@@ -48,7 +56,11 @@ func pingMaster(masterTrackerService masterPb.TrackerServiceClient) {
 		<-ticker.C
 		// Execute your code here
 		fmt.Println("Ping Master at:", time.Now())
-		masterTrackerService.PingMe(context.Background(), &masterPb.PingRequest{DK_ID: int32(dataKeeperInfo.id)})
+		ee, err := masterTrackerService.PingMe(context.Background(), &masterPb.PingRequest{DK_ID: int32(dataKeeperInfo.id)})
+		log.Println("Ping response:", ee)
+		if err != nil {
+			log.Println("Error:", err)
+		}
 	}
 }
 
@@ -81,10 +93,10 @@ func main() {
 	}
 	fmt.Println("DataKeeper:", dataKeeperInfo)
 
-	// id, masterTrackerService := initialize()
-	// dataKeeperInfo.id = id
-	// go pingMaster(masterTrackerService)
-	go uploadServer(dataKeeperInfo.UploadPort, nil)
+	id, masterTrackerService := initialize()
+	dataKeeperInfo.id = id
+	go pingMaster(masterTrackerService)
+	go uploadServer(dataKeeperInfo.UploadPort, masterTrackerService)
 	go downloadServer(dataKeeperInfo.DownloadPort)
 	go grpcServer(dataKeeperInfo.GrpcPort)
 	for {

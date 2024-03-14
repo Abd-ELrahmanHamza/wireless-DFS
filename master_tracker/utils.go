@@ -50,14 +50,14 @@ func newAtomicCounter() func() int32 {
 var nodesCounter = newAtomicCounter()
 
 func run_grpc() {
-	lis, err := net.Listen("tcp", ":8080")
+	lis, err := net.Listen("tcp", ":8000")
 	if err != nil {
 		fmt.Println("failed to listen:", err)
 		return
 	}
 	s := grpc.NewServer()
 	pb.RegisterTrackerServiceServer(s, &TrackerServer{})
-	fmt.Println("Server started. Listening on port 8080...")
+	fmt.Println("Server started. Listening on port 8000...")
 	if err := s.Serve(lis); err != nil {
 		fmt.Println("failed to serve:", err)
 	}

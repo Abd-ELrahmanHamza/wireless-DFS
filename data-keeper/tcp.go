@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	masterPb "dfs/master_tracker/pbuff"
 	"encoding/binary"
 	"fmt"
@@ -9,7 +10,6 @@ import (
 	"net"
 	"os"
 	"strings"
-	"context"
 )
 
 // func handleConnection(conn net.Conn, operation string) {
@@ -105,7 +105,7 @@ func handleUpload(conn net.Conn, masterTrackerService masterPb.TrackerServiceCli
 
 	// Send confirmation to the master tracker
 	masterTrackerService.SendingFinished(context.Background(),
-		&masterPb.SendingFinishedRequest{DK_ID: int32(dataKeeperInfo.id), fileName: filename, filePath: filepath, Client_ID: int32(receivedID)})
+		&masterPb.SendingFinishedRequest{DK_ID: int32(dataKeeperInfo.id), FileName: filename, FilePath: filepath, Client_ID: int32(receivedID)})
 
 	fmt.Println("File uploaded successfully:", filepath)
 }

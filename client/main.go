@@ -6,12 +6,13 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"google.golang.org/grpc"
 	"io"
 	"log"
 	"math/rand"
 	"net"
 	"os"
+
+	"google.golang.org/grpc"
 )
 
 var CLIENT_ADDRESS string = "localhost:5000"
