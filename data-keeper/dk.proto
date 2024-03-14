@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "dfs/data-keeper";
+
+package dfs;
+
+message ReplicateRequest{
+    string port = 1;
+    string file_name = 2;
+}
+
+message ReplicateResponse{
+    bool ok = 1;
+}
+
+service MP4Service {
+    rpc ReplicateFile(ReplicateRequest)  returns (ReplicateResponse);
+}
