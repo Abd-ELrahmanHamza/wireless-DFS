@@ -20,7 +20,7 @@ func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.Replicate
 	conn, err := net.Dial("tcp", req.SrcDkAddr)
 	if err != nil {
 		fmt.Println("Error connecting:", err.Error())
-		return &pb.ReplicateResponse{Ok: false}, nil
+		return &pb.ReplicateResponse{FilePath: ""}, nil
 	}
 	defer conn.Close()
 
@@ -37,7 +37,7 @@ func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.Replicate
 	// Send the message
 	if _, err := conn.Write(message); err != nil {
 		fmt.Println("Error sending data:", err.Error())
-		return &pb.ReplicateResponse{Ok: false}, nil
+		return &pb.ReplicateResponse{FilePath: ""}, nil
 	}
 
 	// Receive server response
@@ -54,7 +54,7 @@ func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.Replicate
 	file, err := os.Create(dataKeeperInfo.Directory + "/" + req.FileName)
 	if err != nil {
 		fmt.Println("Error creating file:", err)
-		return &pb.ReplicateResponse{Ok: false}, nil
+		return &pb.ReplicateResponse{FilePath: ""}, nil
 	}
 	defer file.Close()
 
@@ -62,11 +62,11 @@ func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.Replicate
 	_, err = io.Copy(file, conn)
 	if err != nil {
 		fmt.Println("Error writing to file:", err)
-		return &pb.ReplicateResponse{Ok: false}, nil
+		return &pb.ReplicateResponse{FilePath: ""}, nil
 	}
 
 	fmt.Println("File downloaded successfully:", req.FileName)
-	return &pb.ReplicateResponse{Ok: true}, nil
+	return &pb.ReplicateResponse{FilePath: dataKeeperInfo.Directory + "/" + req.FileName}, nil
 }
 
 func grpcServer(port string) {
