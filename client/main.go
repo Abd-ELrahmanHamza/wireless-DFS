@@ -68,6 +68,11 @@ func SendFile2DK(address string, file *os.File) {
 			log.Fatalf("Failed to close connection: %v", err2)
 		}
 	}(conn)
+	// send client id
+	err3 := binary.Write(conn, binary.LittleEndian, ID)
+	if err3 != nil {
+		log.Fatalf("Failed to write: %v", err3)
+	}
 	fileName := file.Name()
 	fileNameLength := len(fileName)
 	err0 := binary.Write(conn, binary.LittleEndian, int32(fileNameLength))
