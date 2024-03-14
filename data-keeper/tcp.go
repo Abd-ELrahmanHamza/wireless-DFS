@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	"strings"
 )
 
 // func handleConnection(conn net.Conn, operation string) {
@@ -113,16 +112,25 @@ func handleUpload(conn net.Conn, masterTrackerService masterPb.TrackerServiceCli
 func handleDownload(conn net.Conn) {
 	defer conn.Close()
 
-	// Buffer to read incoming data
-	buffer := make([]byte, 1024)
-
-	// Read operation type and filename from client
-	n, err := conn.Read(buffer)
+	// Read filename size
+	filenameSizeBytes := make([]byte, 4)
+	_, err := io.ReadFull(conn, filenameSizeBytes)
 	if err != nil {
-		fmt.Println("Error reading:", err.Error())
+		fmt.Println("Error reading filename size:", err)
 		return
 	}
-	filename := strings.TrimSpace(string(buffer[:n]))
+	filenameSize := int(binary.BigEndian.Uint32(filenameSizeBytes))
+	println("Received filename size: ", filenameSize)
+
+	// Read filename
+	filenameBytes := make([]byte, filenameSize)
+	_, err = io.ReadFull(conn, filenameBytes)
+	if err != nil {
+		fmt.Println("Error reading filename:", err)
+		return
+	}
+	filename := string(filenameBytes)
+	println("Received filename: ", filename)
 
 	// Send confirmation to the client
 	confirmation := "Server ready for download operation"

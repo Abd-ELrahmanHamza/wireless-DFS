@@ -56,9 +56,9 @@ func pingMaster(masterTrackerService masterPb.TrackerServiceClient) {
 	for {
 		<-ticker.C
 		// Execute your code here
-		fmt.Println("Ping Master at:", time.Now())
-		ee, err := masterTrackerService.PingMe(context.Background(), &masterPb.PingRequest{DK_ID: int32(dataKeeperInfo.id)})
-		log.Println("Ping response:", ee)
+		// fmt.Println("Ping Master at:", time.Now())
+		_, err := masterTrackerService.PingMe(context.Background(), &masterPb.PingRequest{DK_ID: int32(dataKeeperInfo.id)})
+		// log.Println("Ping response:", ee)
 		if err != nil {
 			log.Println("Error:", err)
 		}

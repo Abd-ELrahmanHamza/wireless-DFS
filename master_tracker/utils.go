@@ -169,7 +169,7 @@ func getDownloadPorts(fileName string) []string {
 	values, found := FilesLookupTable.Get(fileName)
 	if found {
 		for _, v := range values {
-			downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addrs[0])
+			downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD])
 		}
 	}
 	return downloadPorts

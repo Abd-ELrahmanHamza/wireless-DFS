@@ -13,7 +13,7 @@ type TrackerServer struct {
 
 func (s *TrackerServer) PingMe(ctx context.Context, req *pb.PingRequest) (*pb.PingResponse, error) {
 	dk_id := req.GetDK_ID()
-	log.Println("Received ping Signal from: ", dk_id)
+	// log.Println("Received ping Signal from: ", dk_id)
 	// check if the data keeper node is in the lookup table
 	if _, ok := DataNodes_Map[dk_id]; ok {
 		// update the last ping time
