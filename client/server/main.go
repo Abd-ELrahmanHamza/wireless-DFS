@@ -1,16 +1,17 @@
 package main
 
 import (
-	pb "client/mp4_service"
 	"context"
+	pb "dfs/client/mp4_service"
 	"fmt"
-	"google.golang.org/grpc"
 	"log"
 	"net"
+
+	"google.golang.org/grpc"
 )
 
 type MP4Server struct {
-	pb.UnimplementedMP4ServiceServer
+	pb.UnimplementedClientServiceServer
 }
 
 func (s *MP4Server) Upload(ctx context.Context, req *pb.UploadRequest) (*pb.UploadResponse, error) {
@@ -26,7 +27,7 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	pb.RegisterMP4ServiceServer(s, &MP4Server{})
+	pb.RegisterMP4SReerviceServer(s, &MP4Server{})
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}

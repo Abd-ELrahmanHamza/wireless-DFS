@@ -1,15 +1,16 @@
 package main
 
 import (
-	pb "client/mp4_service"
 	"context"
+	pb "dfs/client/mp4_service"
 	"fmt"
-	"google.golang.org/grpc"
 	"io"
 	"log"
 	"math/rand"
 	"net"
 	"os"
+
+	"google.golang.org/grpc"
 )
 
 var CLIENT_PORT int32 = 5000
