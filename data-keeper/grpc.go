@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	pb "dfs/data-keeper/pbuff"
+	"encoding/binary"
 	"fmt"
 	"google.golang.org/grpc"
 	"io"
@@ -23,9 +24,18 @@ func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.Replicate
 	}
 	defer conn.Close()
 
-	// Send operation type and filename to server
-	_, err = conn.Write([]byte(req.FileName))
-	if err != nil {
+	// Prepare the message
+	message := make([]byte, 0)
+	// Convert filename size to bytes and append to message
+	filenameSizeBytes := make([]byte, 4) // Assuming int is 4 bytes
+	binary.BigEndian.PutUint32(filenameSizeBytes, uint32(len(req.FileName)))
+	message = append(message, filenameSizeBytes...)
+
+	// Append filename to message
+	message = append(message, []byte(req.FileName)...)
+
+	// Send the message
+	if _, err := conn.Write(message); err != nil {
 		fmt.Println("Error sending data:", err.Error())
 		return &pb.ReplicateResponse{Ok: false}, nil
 	}
