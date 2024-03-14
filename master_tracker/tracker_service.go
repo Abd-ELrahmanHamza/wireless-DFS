@@ -59,20 +59,3 @@ func sendingFinished(ctx context.Context, req *pb.SendingFinishedRequest) (*pb.S
 		OK: true,
 	}, nil
 }
-
-func (s *TrackerServer) uploadFile(ctx context.Context, req *pb.UploadFileRequest) (*pb.UploadFileResponse, error) {
-	filePath := req.GetFilePath()
-	log.Println("Received file upload request for: ", filePath)
-	// get the data keeper node with the least amount of files
-	return &pb.UploadFileResponse{
-		Port: getRandomPort(),
-	}, nil
-}
-
-func (s *TrackerServer) downloadFile(ctx context.Context, req *pb.DownloadFileRequest) (*pb.DownloadFileResponse, error) {
-	fileName := req.GetFileName()
-	log.Println("Received file download request for: ", fileName)
-	return &pb.DownloadFileResponse{
-		DK_Addresses: getPorts(fileName),
-	}, nil
-}
