@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "mp4_service/";
+option go_package = "client_service/";
 
 message UploadingCompletionRequest {}
 message UploadingCompletionResponse {}

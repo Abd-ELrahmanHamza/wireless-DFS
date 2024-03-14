@@ -1,21 +1,22 @@
 package main
 
 import (
+	clientPb "client/client_service"
+	masterPb "client/master_tracker"
 	"context"
-	pb "dfs/client/mp4_service"
+	"encoding/binary"
 	"fmt"
+	"google.golang.org/grpc"
 	"io"
 	"log"
 	"math/rand"
 	"net"
 	"os"
-
-	"google.golang.org/grpc"
 )
 
-var CLIENT_PORT int32 = 5000
-var MASTER_PORT int32 = 8000
-var HOST string = "localhost"
+var CLIENT_ADDRESS string = "localhost:5000"
+var MASTER_ADDRESS string = "localhost:8000"
+var ID int32 = -1
 
 func OpenFile(path string) *os.File {
 	file, err := os.Open(path)
@@ -25,38 +26,50 @@ func OpenFile(path string) *os.File {
 	return file
 }
 
-func CreateUploadRequest(file *os.File) *pb.UploadRequest {
+func CreateUploadRequest(file *os.File) *masterPb.UploadFileRequest {
 	fileInfo, err := file.Stat()
 	if err != nil {
 		log.Fatalf("Failed to get file info: %v", err)
 	}
-	return &pb.UploadRequest{Size: int32(fileInfo.Size()), Port: 5000}
+	return &masterPb.UploadFileRequest{FilePath: fileInfo.Name(), ClientAddr: CLIENT_ADDRESS}
 }
 
-func RequestPort(req *pb.UploadRequest, client pb.MasterServiceClient) int32 {
-	res, err := client.Upload(context.Background(), req)
+func Fetch(req *masterPb.UploadFileRequest, client masterPb.TrackerServiceClient) (string, int32) {
+	res, err := client.UploadFile(context.Background(), req)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	port := res.GetPort()
-	return port
+	address := res.GetAddr()
+	id := res.GetClient_ID()
+	return address, id
 }
 
-func RequestUpload(file *os.File, conn *grpc.ClientConn) int32 {
+func RequestUpload(file *os.File, conn *grpc.ClientConn) string {
 	// Create Client
-	client := pb.NewMasterServiceClient(conn)
+	client := masterPb.NewTrackerServiceClient(conn)
 
 	// Create Upload Request
 	req := CreateUploadRequest(file)
 
-	// Request Port
-	port := RequestPort(req, client)
-
-	return port
+	// address and id
+	address, id := Fetch(req, client)
+	ID = id
+	return address
 }
-
-func SendFile2DK(port int32, file *os.File) {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", HOST, port))
+func SendFileName2DK(conn net.Conn, file *os.File) {
+	fileName := file.Name()
+	fileNameLength := len(fileName)
+	err0 := binary.Write(conn, binary.LittleEndian, int32(fileNameLength))
+	if err0 != nil {
+		log.Fatalf("Failed to write: %v", err0)
+	}
+	_, err1 := conn.Write([]byte(fileName))
+	if err1 != nil {
+		log.Fatalf("Failed to write: %v", err1)
+	}
+}
+func SendFile2DK(address string, file *os.File) {
+	conn, err := net.Dial("tcp", address)
 	if err != nil {
 		log.Fatalf("Failed to connect: %v", err)
 	}
@@ -66,43 +79,59 @@ func SendFile2DK(port int32, file *os.File) {
 			log.Fatalf("Failed to close connection: %v", err2)
 		}
 	}(conn)
+	// send client id
+	err3 := binary.Write(conn, binary.LittleEndian, ID)
+	if err3 != nil {
+		log.Fatalf("Failed to write: %v", err3)
+	}
+	SendFileName2DK(conn, file)
+	// send file size
+	fileInfo, err := file.Stat()
+	if err != nil {
+		log.Fatalf("Failed to get file info: %v", err)
+	}
+	fileSize := fileInfo.Size()
+	err2 := binary.Write(conn, binary.LittleEndian, fileSize)
+	if err2 != nil {
+		log.Fatalf("Failed to write: %v", err2)
+	}
 	// send file from client to server
-	_, err = io.Copy(conn, file)
+	_, err = io.CopyN(conn, file, fileSize)
 	if err != nil {
 		log.Fatalf("Failed to send file: %v", err)
 	}
 }
 
 type MP4Checker struct {
-	pb.UnimplementedClientServiceServer
+	clientPb.UnimplementedClientServiceServer
 }
 
-func (s *MP4Checker) UploadingCompletion(ctx context.Context, req *pb.UploadingCompletionRequest) (*pb.UploadingCompletionResponse, error) {
+func (s *MP4Checker) UploadingCompletion(ctx context.Context, req *clientPb.UploadingCompletionRequest) (*clientPb.UploadingCompletionResponse, error) {
 	log.Println("MP4 file has been uploaded successfully")
 	// kill the client after the file has been uploaded
 	defer os.Exit(0)
-	return &pb.UploadingCompletionResponse{}, nil
+	return &clientPb.UploadingCompletionResponse{}, nil
 }
-func GetDataKeepersPorts(conn *grpc.ClientConn, name string) []int32 {
+func GetDataKeepersAddresses(conn *grpc.ClientConn, name string) []string {
 	// Create Client
-	client := pb.NewMasterServiceClient(conn)
+	client := masterPb.NewTrackerServiceClient(conn)
 	// Create Download Request
-	req := &pb.DownloadRequest{Name: name}
-	res, err := client.Download(context.Background(), req)
+	req := &masterPb.DownloadFileRequest{FileName: name}
+	res, err := client.DownloadFile(context.Background(), req)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	ports := res.GetPorts()
-	return ports
+	addresses := res.GetDK_Addresses()
+	return addresses
 }
 
-func SelectDK(ports []int32) int32 {
+func SelectDK(addresses []string) string {
 	// select a random data keeper uniformly
-	index := rand.Intn(len(ports))
-	return ports[index]
+	index := rand.Intn(len(addresses))
+	return addresses[index]
 }
 
-func DownloadFile(conn net.Conn) {
+func DownloadFile(conn net.Conn, fileName string) {
 	// receive file from server
 	file, err := os.Create("download.mp4")
 	if err != nil {
@@ -114,6 +143,8 @@ func DownloadFile(conn net.Conn) {
 			log.Fatalf("Failed to close file: %v", err2)
 		}
 	}(file)
+	// send file name to the server
+	SendFileName2DK(conn, file)
 	// copy the file from the connection to the file
 	_, err = io.Copy(file, conn)
 	if err != nil {
@@ -123,14 +154,14 @@ func DownloadFile(conn net.Conn) {
 
 func main() {
 	// client works as a server to receive the completion message from the server
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", HOST, CLIENT_PORT))
-	log.Println("Client starts listening on port 5000...")
+	lis, err := net.Listen("tcp", CLIENT_ADDRESS)
+	log.Println(fmt.Sprintf("Client is listening on %s", CLIENT_ADDRESS))
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
 	// Connect to the server
-	conn, err2 := grpc.Dial(fmt.Sprintf("%s:%d", HOST, MASTER_PORT), grpc.WithInsecure(), grpc.WithBlock())
+	conn, err2 := grpc.Dial(MASTER_ADDRESS, grpc.WithInsecure(), grpc.WithBlock())
 	if err2 != nil {
 		log.Fatalf("Failed to connect: %v", err2)
 	}
@@ -155,27 +186,29 @@ func main() {
 		SendFile2DK(port, file)
 
 		s := grpc.NewServer()
-		pb.RegisterClientServiceServer(s, &MP4Checker{})
+		clientPb.RegisterClientServiceServer(s, &MP4Checker{})
 		if err4 := s.Serve(lis); err4 != nil {
 			log.Fatalf("Failed to serve: %v", err4)
 		}
 	} else if mode == "download" {
 		// Request download
-		ports := GetDataKeepersPorts(conn, filePath)
-		port := SelectDK(ports)
-		log.Printf("Received port: %d", port)
+		addresses := GetDataKeepersAddresses(conn, filePath)
+		address := SelectDK(addresses)
+		log.Printf("Received address: %d", address)
 
-		conn2, err5 := lis.Accept()
-		if err5 != nil {
-			log.Fatalf("Failed to accept: %v", err5)
+		// Connect to the data keeper
+		connDK, errDK := net.Dial("tcp", address)
+		if errDK != nil {
+			log.Fatalf("Failed to connect: %v", errDK)
 		}
-		defer func(conn net.Conn) {
-			err6 := conn2.Close()
-			if err6 != nil {
-				log.Fatalf("Failed to close connection: %v", err6)
+		defer func(connDK net.Conn) {
+			err7 := connDK.Close()
+			if err7 != nil {
+				log.Fatalf("Failed to close connection: %v", err7)
 			}
-		}(conn2)
+		}(connDK)
 
-		DownloadFile(conn2)
+		// Send file name to the data keeper
+		DownloadFile(connDK, filePath)
 	}
 }

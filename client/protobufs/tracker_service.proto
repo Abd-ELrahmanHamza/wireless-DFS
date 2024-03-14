@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option go_package = "master_tracker/";
+package tracker;
+
+// Define your message types and services here
+message PingRequest { int32 DK_ID = 1; }
+message PingResponse { bool OK = 1; }
+message InitialDataRequest {
+  // the datakeepers will send their data to the tracker
+  repeated string DK_Addrs = 1; // Download - Upload Addrs - GRPC
+}
+// localhost:port
+message InitialDataResponse {
+  // generate a id for the keeper
+  int32 DK_ID = 1;
+}
+message SendingFinishedRequest {
+  int32 DK_ID = 1;
+  string fileName = 2;
+  string filePath = 3;
+  int32 Client_ID = 4;
+}
+message SendingFinishedResponse { bool OK = 1; }
+
+message UploadFileRequest {
+  string filePath = 1;
+  string ClientAddr = 2;
+}
+message UploadFileResponse {
+  string Addr = 1;
+  int32 Client_ID = 2;
+}
+
+message DownloadFileRequest { 
+  string fileName = 1;  
+}
+message DownloadFileResponse { repeated string DK_Addresses = 1; }
+
+// Example service
+service TrackerService {
+  // from Datakeepers
+  rpc pingMe(PingRequest) returns (PingResponse);
+  rpc sendInitalData(InitialDataRequest) returns (InitialDataResponse);
+  rpc sendingFinished(SendingFinishedRequest) returns (SendingFinishedResponse);
+  // from Clients
+  rpc uploadFile(UploadFileRequest) returns (UploadFileResponse);
+  rpc downloadFile(DownloadFileRequest) returns (DownloadFileResponse);
+}
