@@ -56,7 +56,18 @@ func RequestUpload(file *os.File, conn *grpc.ClientConn) string {
 	ID = id
 	return address
 }
-
+func SendFileName2DK(conn net.Conn, file *os.File) {
+	fileName := file.Name()
+	fileNameLength := len(fileName)
+	err0 := binary.Write(conn, binary.LittleEndian, int32(fileNameLength))
+	if err0 != nil {
+		log.Fatalf("Failed to write: %v", err0)
+	}
+	_, err1 := conn.Write([]byte(fileName))
+	if err1 != nil {
+		log.Fatalf("Failed to write: %v", err1)
+	}
+}
 func SendFile2DK(address string, file *os.File) {
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
@@ -73,16 +84,7 @@ func SendFile2DK(address string, file *os.File) {
 	if err3 != nil {
 		log.Fatalf("Failed to write: %v", err3)
 	}
-	fileName := file.Name()
-	fileNameLength := len(fileName)
-	err0 := binary.Write(conn, binary.LittleEndian, int32(fileNameLength))
-	if err0 != nil {
-		log.Fatalf("Failed to write: %v", err0)
-	}
-	_, err1 := conn.Write([]byte(fileName))
-	if err1 != nil {
-		log.Fatalf("Failed to write: %v", err1)
-	}
+	SendFileName2DK(conn, file)
 	// send file size
 	fileInfo, err := file.Stat()
 	if err != nil {
@@ -129,7 +131,7 @@ func SelectDK(addresses []string) string {
 	return addresses[index]
 }
 
-func DownloadFile(conn net.Conn) {
+func DownloadFile(conn net.Conn, fileName string) {
 	// receive file from server
 	file, err := os.Create("download.mp4")
 	if err != nil {
@@ -141,6 +143,8 @@ func DownloadFile(conn net.Conn) {
 			log.Fatalf("Failed to close file: %v", err2)
 		}
 	}(file)
+	// send file name to the server
+	SendFileName2DK(conn, file)
 	// copy the file from the connection to the file
 	_, err = io.Copy(file, conn)
 	if err != nil {
@@ -192,17 +196,19 @@ func main() {
 		address := SelectDK(addresses)
 		log.Printf("Received address: %d", address)
 
-		conn2, err5 := lis.Accept()
-		if err5 != nil {
-			log.Fatalf("Failed to accept: %v", err5)
+		// Connect to the data keeper
+		connDK, errDK := net.Dial("tcp", address)
+		if errDK != nil {
+			log.Fatalf("Failed to connect: %v", errDK)
 		}
-		defer func(conn net.Conn) {
-			err6 := conn2.Close()
-			if err6 != nil {
-				log.Fatalf("Failed to close connection: %v", err6)
+		defer func(connDK net.Conn) {
+			err7 := connDK.Close()
+			if err7 != nil {
+				log.Fatalf("Failed to close connection: %v", err7)
 			}
-		}(conn2)
+		}(connDK)
 
-		DownloadFile(conn2)
+		// Send file name to the data keeper
+		DownloadFile(connDK, filePath)
 	}
 }
