@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"time"
 
 	"google.golang.org/grpc"
 )
@@ -125,6 +126,8 @@ func GetDataKeepersAddresses(conn *grpc.ClientConn, name string) []string {
 }
 
 func SelectDK(addresses []string) string {
+	current_time := time.Now().UnixNano()
+	rand.Seed(current_time)
 	// select a random data keeper uniformly
 	index := rand.Intn(len(addresses))
 	return addresses[index]
@@ -152,6 +155,10 @@ func DownloadFile(conn net.Conn, fileName string) {
 }
 
 func main() {
+	// set seed for random number generator to current time
+	current_time := time.Now().UnixNano()
+	rand.Seed(current_time)
+
 	// client works as a server to receive the completion message from the server
 	lis, err := net.Listen("tcp", CLIENT_ADDRESS)
 	log.Printf("Client is listening on %s", CLIENT_ADDRESS)
@@ -191,6 +198,10 @@ func main() {
 	} else if mode == "download" {
 		// Request download
 		addresses := GetDataKeepersAddresses(conn, filePath)
+		log.Printf("len addresses: %v", len(addresses))
+		for _, address := range addresses {
+			log.Printf("== Received address: %s", address)
+		}
 		address := SelectDK(addresses)
 		log.Printf("Received address: %s", address)
 
