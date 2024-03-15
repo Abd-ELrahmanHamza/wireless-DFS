@@ -88,12 +88,17 @@ func chooseRandomNode(exceptNodes []*DataNode, N int) []*DataNode {
 	rand.Shuffle(len(availableNodes), func(i, j int) {
 		availableNodes[i], availableNodes[j] = availableNodes[j], availableNodes[i]
 	})
-
-	// Simply take the first N nodes after the shuffle as the chosen nodes.
-	return availableNodes[:N]
+	log.Println("Shuffled nodes: ", availableNodes)
+	// slice first N elemets ifvailable nodes is large eough
+	println(len(availableNodes))
+	if len(availableNodes) > N {
+		return availableNodes[:N]
+	}
+	return availableNodes
 }
 
 func replicate(srcDownAddr string, dstGrpcAddr string, file_name string) string {
+	log.Println("Replicating file: ", file_name, " from: ", srcDownAddr, " to: ", dstGrpcAddr)
 	conn, err := grpc.Dial(dstGrpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		fmt.Println("did not connect:", err)
@@ -142,15 +147,17 @@ func check_replications_goRoutine() {
 			if fileOn < 3 {
 				// replicate the file to another data keeper node
 				// choose a random data keeper node to replicate the file to
-				chosenNodes := chooseRandomNode(DNss, 3-len(DNss))
-				if chosenNodes == nil {
+				NodesToSendTo := chooseRandomNode(DNss, 3-fileOn)
+				log.Println("NodesToSendTo: ", NodesToSendTo)
+				if NodesToSendTo == nil {
 					continue
 				}
 				// replicate the file to the chosen data keeper nodes
-				for _, node := range chosenNodes {
+				for _, node := range NodesToSendTo {
 					// src: DownloadPort of src node
 					// dst: Grpc port of dst node
-					filePath := replicate(DNss[0].Addrs[1], node.Addrs[2], file_name.(string))
+					log.Println("Replicating to: ", node)
+					filePath := replicate(DNss[0].Addrs[DOWNLOAD], node.Addrs[GRPC], file_name.(string))
 					if filePath != "" {
 						FilesLookupTable.Put(file_name, &lookupEntry{node, filePath})
 					}
