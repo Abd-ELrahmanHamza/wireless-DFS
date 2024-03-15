@@ -129,12 +129,17 @@ func check_replications_goRoutine() {
 			// check if the file has at least 3 replications
 			DNss := []*DataNode{}
 			DNs, _ := FilesLookupTable.Get(file_name)
+			fileOn := 0
 			for _, DN := range DNs {
 				DNss = append(DNss, DN.(*lookupEntry).DataKeeperNode)
+				// count it only if node is alive
+				if DN.(*lookupEntry).DataKeeperNode.isAlive() {
+					fileOn++
+				}
 			}
 
 			// check if the file has at least 3 replications
-			if len(DNss) < 3 {
+			if fileOn < 3 {
 				// replicate the file to another data keeper node
 				// choose a random data keeper node to replicate the file to
 				chosenNodes := chooseRandomNode(DNss, 3-len(DNss))
