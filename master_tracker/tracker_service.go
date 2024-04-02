@@ -66,10 +66,15 @@ func (s *TrackerServer) SendingFinished(ctx context.Context, req *pb.SendingFini
 		}
 	} else {
 		log.Println("DataKeeperNode with ID: ", dk_id, " is not in the lookup table")
+		// remove client from clients_map
+		delete(Clients_Map, cl_id)
 		return &pb.SendingFinishedResponse{
 			OK: false, // https://pbs.twimg.com/media/F01nLwRWcAYL77x.jpg
 		}, nil
 	}
+	// remove client from clients_map
+	delete(Clients_Map, cl_id)
+
 	return &pb.SendingFinishedResponse{
 		OK: true,
 	}, nil
