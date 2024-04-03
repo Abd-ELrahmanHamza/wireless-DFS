@@ -85,7 +85,6 @@ func (s *TrackerServer) UploadFile(ctx context.Context, req *pb.UploadFileReques
 	filePath := req.GetFilePath()
 	log.Println("Received file upload request for: ", filePath)
 	c_id := nodesCounter()
-	// check if client is not in Clients_map then give it an id and add it to the map
 	uploadAddr := getRandomPort(UPLOAD)
 	Clients_Map[c_id] = &ClientNode{c_id, c_addr, uploadAddr}
 	return &pb.UploadFileResponse{

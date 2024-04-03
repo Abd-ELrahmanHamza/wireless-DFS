@@ -189,9 +189,11 @@ func getDownloadPorts(fileName string) []string {
 	downloadPorts := []string{}
 	values, found := FilesLookupTable.Get(fileName)
 	if found {
-		for _, v := range values {
-			if v.(*lookupEntry).DataKeeperNode.isAlive() && !isPortUsed(v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD]) {
-				downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD])
+		for len(downloadPorts) == 0 {
+			for _, v := range values {
+				if v.(*lookupEntry).DataKeeperNode.isAlive() && !isPortUsed(v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD]) {
+					downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD])
+				}
 			}
 		}
 	}
@@ -207,12 +209,13 @@ const (
 
 func getRandomPort(portType int) string {
 	ports := []string{}
-	for _, node := range DataNodes_Map {
-		// check if port is not used
-		if node.isAlive() && !isPortUsed(node.Addrs[portType]) {
-			ports = append(ports, node.Addrs[portType])
+	for len(ports) == 0 {
+		for _, node := range DataNodes_Map {
+			// check if port is not used
+			if node.isAlive() && !isPortUsed(node.Addrs[portType]) {
+				ports = append(ports, node.Addrs[portType])
+			}
 		}
 	}
-	// choose radom port
 	return ports[rand.Intn(len(ports))]
 }
