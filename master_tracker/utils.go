@@ -190,7 +190,7 @@ func getDownloadPorts(fileName string) []string {
 	values, found := FilesLookupTable.Get(fileName)
 	if found {
 		for _, v := range values {
-			if v.(*lookupEntry).DataKeeperNode.isAlive() {
+			if v.(*lookupEntry).DataKeeperNode.isAlive() && !isPortUsed(v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD]) {
 				downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD])
 			}
 		}
