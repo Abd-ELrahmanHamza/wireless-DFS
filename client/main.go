@@ -5,6 +5,7 @@ import (
 	masterPb "client/master_tracker"
 	"context"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -16,7 +17,8 @@ import (
 )
 
 var CLIENT_ADDRESS string = "localhost:9000"
-var MASTER_ADDRESS string = "localhost:8000"
+var REMOTE_CLIENT_ADDRESS string = "5.tcp.eu.ngrok.io:14740"
+var MASTER_ADDRESS string = "0.tcp.eu.ngrok.io:17173"
 var ID int32 = -1
 
 func OpenFile(path string) *os.File {
@@ -32,7 +34,7 @@ func CreateUploadRequest(file *os.File) *masterPb.UploadFileRequest {
 	if err != nil {
 		log.Fatalf("Failed to get file info: %v", err)
 	}
-	return &masterPb.UploadFileRequest{FilePath: fileInfo.Name(), ClientAddr: CLIENT_ADDRESS}
+	return &masterPb.UploadFileRequest{FilePath: fileInfo.Name(), ClientAddr: REMOTE_CLIENT_ADDRESS}
 }
 
 func Fetch(req *masterPb.UploadFileRequest, client masterPb.TrackerServiceClient) (string, int32) {
@@ -171,6 +173,7 @@ func main() {
 	if err2 != nil {
 		log.Fatalf("Failed to connect: %v", err2)
 	}
+	log.Printf(fmt.Sprintf("Connected to the server: %s", MASTER_ADDRESS))
 	defer func(conn *grpc.ClientConn) {
 		err3 := conn.Close()
 		if err3 != nil {
