@@ -45,6 +45,7 @@ func (s *TrackerServer) SendInitalData(ctx context.Context, req *pb.InitialDataR
 func (s *TrackerServer) SendingFinished(ctx context.Context, req *pb.SendingFinishedRequest) (*pb.SendingFinishedResponse, error) {
 	dk_id := req.GetDK_ID()
 	cl_id := req.GetClient_ID()
+	file_size := req.GetFileSize()
 	// client_id := req.GetClientID()
 	log.Println("Received sending finished signal from: ", dk_id)
 	// check if the data keeper node is in the lookup table
@@ -53,13 +54,13 @@ func (s *TrackerServer) SendingFinished(ctx context.Context, req *pb.SendingFini
 		// TODO : SEND TO CLIENT THAT FILE IS READY AND REplicate it
 		sendSuccessToClient(cl_id)
 
-		FilesLookupTable.Put(req.GetFileName(), &lookupEntry{dnode, req.GetFilePath()})
+		FilesLookupTable.Put(req.GetFileName(), &lookupEntry{dnode, req.GetFilePath(), file_size})
 		nodes_to_replicate_to := chooseRandomNode([]*DataNode{dnode}, 2)
 		for _, node := range nodes_to_replicate_to {
 			log.Println("Replicating to: ", node)
 			filePath := replicate(dnode.Addrs[1], node.Addrs[2], req.GetFileName())
 			if filePath != "" {
-				FilesLookupTable.Put(req.GetFileName(), &lookupEntry{node, filePath})
+				FilesLookupTable.Put(req.GetFileName(), &lookupEntry{node, filePath, file_size})
 			}
 
 		}
@@ -93,7 +94,7 @@ func (s *TrackerServer) UploadFile(ctx context.Context, req *pb.UploadFileReques
 			Client_ID: -1,
 		}, nil
 	}
-	
+
 	Clients_Map[c_id] = &ClientNode{c_id, c_addr, uploadAddr}
 	return &pb.UploadFileResponse{
 		Addr:      uploadAddr,

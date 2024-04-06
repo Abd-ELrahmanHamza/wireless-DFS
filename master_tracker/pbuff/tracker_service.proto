@@ -20,13 +20,13 @@ message SendingFinishedRequest {
   string fileName = 2;
   string filePath = 3;
   int32 Client_ID = 4;
+  int64 fileSize = 5;
 }
 message SendingFinishedResponse { bool OK = 1; }
 
 message UploadFileRequest {
   string filePath = 1;
   string ClientAddr = 2;
-  int64 fileSize = 3;
 }
 message UploadFileResponse {
   string Addr = 1;
