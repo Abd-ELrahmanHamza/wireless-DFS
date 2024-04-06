@@ -161,7 +161,7 @@ func (s *MP4Checker) UploadingCompletion(ctx context.Context, req *clientPb.Uplo
 	defer os.Exit(0)
 	return &clientPb.UploadingCompletionResponse{}, nil
 }
-func GetDataKeepersAddresses(conn *grpc.ClientConn, name string) []string {
+func GetDataKeepersAddresses(conn *grpc.ClientConn, name string) ([]string, int64) {
 	// Create Client
 	client := masterPb.NewTrackerServiceClient(conn)
 	// Create Download Request
@@ -171,7 +171,8 @@ func GetDataKeepersAddresses(conn *grpc.ClientConn, name string) []string {
 		log.Fatalf("Error: %v", err)
 	}
 	addresses := res.GetDK_Addresses()
-	return addresses
+	size := res.GetFileSize()
+	return addresses, size
 }
 
 func SelectDK(addresses []string) (string, error) {
@@ -253,21 +254,15 @@ func main() {
 		}
 	} else if mode == "download" {
 		// Request download
-		addresses := GetDataKeepersAddresses(conn, filePath)
+		addresses, size := GetDataKeepersAddresses(conn, filePath)
 		log.Printf("len addresses: %v", len(addresses))
 		for _, address := range addresses {
 			log.Printf("== Received address: %s", address)
 		}
-		address, dkError := SelectDK(addresses)
-		if dkError != nil {
-			log.Fatalf("Failed to select data keeper: %v", dkError)
-			return
-		}
-		log.Printf("Received address: %s", address)
 
 		downloadedFile := createDownloadedFile()
 
 		// Connect to the data keeper
-		parallelDownload(downloadedFile, 0, len(addresses), addresses, filePath)
+		parallelDownload(downloadedFile, size, len(addresses), addresses, filePath)
 	}
 }
