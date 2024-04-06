@@ -130,10 +130,10 @@ func SelectDK(addresses []string) (string, error) {
 	current_time := time.Now().UnixNano()
 	rand.Seed(current_time)
 	// select a random data keeper uniformly
-	index := rand.Intn(len(addresses))
-	if index >= len(addresses) {
+	if len(addresses) == 0 {
 		return "", fmt.Errorf("no data keeper available")
 	}
+	index := rand.Intn(len(addresses))
 	return addresses[index], nil
 }
 

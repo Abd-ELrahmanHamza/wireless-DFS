@@ -215,5 +215,8 @@ func getRandomPort(portType int) string {
 		}
 	}
 	// choose radom port
+	if len(ports) == 0 {
+		return ""
+	}
 	return ports[rand.Intn(len(ports))]
 }
