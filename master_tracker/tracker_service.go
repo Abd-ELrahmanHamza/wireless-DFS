@@ -52,7 +52,6 @@ func (s *TrackerServer) SendingFinished(ctx context.Context, req *pb.SendingFini
 		// update the last ping time
 		// TODO : SEND TO CLIENT THAT FILE IS READY AND REplicate it
 		sendSuccessToClient(cl_id)
-		log.Println("Sending success to client: ", cl_id)
 
 		FilesLookupTable.Put(req.GetFileName(), &lookupEntry{dnode, req.GetFilePath()})
 		nodes_to_replicate_to := chooseRandomNode([]*DataNode{dnode}, 2)
