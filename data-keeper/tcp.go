@@ -144,14 +144,14 @@ func handleDownload(conn net.Conn) {
 	offset := int(binary.BigEndian.Uint32(fileOffset))
 	println("Received file offset: ", offset)
 
-	// Read requested file size
-	fileSize := make([]byte, 8)
-	_, err = io.ReadFull(conn, fileSize)
+	// Read requested end offset
+	endOffset := make([]byte, 8)
+	_, err = io.ReadFull(conn, endOffset)
 	if err != nil {
-		fmt.Println("Error reading file size:", err)
+		fmt.Println("Error reading end offset:", err)
 		return
 	}
-	size := int64(binary.BigEndian.Uint64(fileSize))
+	size := int(binary.BigEndian.Uint32(endOffset)) - offset + 1
 	println("Received file size: ", size)
 
 	// // Send confirmation to the client
