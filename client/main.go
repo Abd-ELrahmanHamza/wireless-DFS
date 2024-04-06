@@ -113,6 +113,13 @@ func parallelDownload(dst *os.File, size int64, numGoroutines int, addresses []s
 	}
 
 	wg.Wait()
+
+	defer func(file *os.File) {
+		err7 := file.Close()
+		if err7 != nil {
+			log.Fatalf("Failed to close file: %v", err7)
+		}
+	}(dst)
 }
 func SendFileName2DK(conn net.Conn, fileName string) {
 	fileNameLength := len(fileName)
@@ -211,12 +218,6 @@ func createDownloadedFile() *os.File {
 	if err != nil {
 		log.Fatalf("Failed to create file: %v", err)
 	}
-	defer func(file *os.File) {
-		err2 := file.Close()
-		if err2 != nil {
-			log.Fatalf("Failed to close file: %v", err2)
-		}
-	}(file)
 	return file
 }
 
