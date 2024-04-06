@@ -178,7 +178,7 @@ func handleDownload(conn net.Conn) {
 		fmt.Println("Error seeking file:", err)
 		return
 	}
-	_, err = io.CopyN(conn, file, size)
+	_, err = io.CopyN(conn, file, int64(size))
 	if err != nil {
 		fmt.Println("Error sending file data:", err)
 		return
