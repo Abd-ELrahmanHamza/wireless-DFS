@@ -35,6 +35,7 @@ func (d *DataNode) isAlive() bool {
 type lookupEntry struct {
 	DataKeeperNode *DataNode
 	filePath       string
+	fileSize 	 int64
 }
 
 // implement print function for lookupTableEntry
@@ -160,7 +161,10 @@ func check_replications_goRoutine() {
 					log.Println("Replicating to: ", node)
 					filePath := replicate(DNss[0].Addrs[DOWNLOAD], node.Addrs[GRPC], file_name.(string))
 					if filePath != "" {
-						FilesLookupTable.Put(file_name, &lookupEntry{node, filePath})
+						// put file in FilesLoopupTable 
+						fileEntries, _ := FilesLookupTable.Get(file_name)
+						entry := fileEntries[0].(*lookupEntry)
+						FilesLookupTable.Put(file_name, &lookupEntry{node, filePath, entry.fileSize})
 					}
 				}
 			}
