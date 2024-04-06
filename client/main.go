@@ -16,9 +16,9 @@ import (
 	"google.golang.org/grpc"
 )
 
-var CLIENT_ADDRESS string = "localhost:9000"
-var REMOTE_CLIENT_ADDRESS string = "5.tcp.eu.ngrok.io:14740"
-var MASTER_ADDRESS string = "0.tcp.eu.ngrok.io:17173"
+var CLIENT_ADDRESS string = "192.168.137.29:9000"
+var REMOTE_CLIENT_ADDRESS string = "192.168.137.29:9000"
+var MASTER_ADDRESS string = "192.168.137.213:8000"
 var ID int32 = -1
 
 func OpenFile(path string) *os.File {
@@ -185,7 +185,6 @@ func main() {
 	// Open file
 	filePath := os.Args[2]
 	file := OpenFile(filePath)
-
 	if mode == "upload" {
 		// Request upload
 		Addr := RequestUpload(file, conn)
