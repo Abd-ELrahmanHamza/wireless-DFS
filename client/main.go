@@ -102,7 +102,7 @@ func parallelDownload(dst *os.File, size int64, numGoroutines int, addresses []s
 				panic(err)
 			}
 			// seek to the start offset
-			_, err = dst.Seek(startOffset, io.SeekStart)
+			//_, err = dst.Seek(startOffset, io.SeekStart)
 			// Copy the chunk of data from the source to the destination
 			_, err = io.CopyN(dst, connDK, endOffset-startOffset)
 			log.Printf("Finished copying chunk %d", i)
