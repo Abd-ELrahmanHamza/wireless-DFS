@@ -69,7 +69,7 @@ func chooseRandomNode(exceptNodes []*DataNode, N int) []*DataNode {
 	// Prepare a slice to hold nodes eligible for selection.
 	var availableNodes []*DataNode
 
-	// Filter allNodes to find those that are alive and not in exceptNodes.
+	// find other nodes and Filter to find those that are alive and not in exceptNodes.
 	for _, node := range DataNodes_Map {
 		if node.isAlive() && !slices.Contains(exceptNodes, node) {
 			availableNodes = append(availableNodes, node)
@@ -81,7 +81,7 @@ func chooseRandomNode(exceptNodes []*DataNode, N int) []*DataNode {
 		log.Println("No available nodes to Replicate To")
 		return nil
 	} else {
-		log.Println("Files are being Replicated To", availableNodes)
+		log.Println("File Can be Replicated To", availableNodes)
 	}
 
 	// Randomly shuffle the available nodes.
@@ -89,7 +89,7 @@ func chooseRandomNode(exceptNodes []*DataNode, N int) []*DataNode {
 		availableNodes[i], availableNodes[j] = availableNodes[j], availableNodes[i]
 	})
 	log.Println("Shuffled nodes: ", availableNodes)
-	// slice first N elemets ifvailable nodes is large eough
+	// slice first N elemets if available nodes is large eough
 	println(len(availableNodes))
 	if len(availableNodes) > N {
 		return availableNodes[:N]
@@ -123,22 +123,23 @@ func sendSuccessToClient(cl_id int32) {
 		log.Println("Could not connect to client to send success: ", Addr, " Error: ", err)
 	}
 	defer conn.Close()
+	log.Println("Sending success to client: ", cl_id)
 	c := clpb.NewClientServiceClient(conn)
 	c.UploadingCompletion(context.Background(), &clpb.UploadingCompletionRequest{})
 }
 
 func check_replications_goRoutine() {
-	// every 10 secodns, check if every file has at least 3 replications and if not, replicate the file to another data keeper node
+	// every 10 secodns, check if every file has at least 3 replications (live) and if not, replicate the file to another data keeper node
 	for {
-		for _, file_name := range FilesLookupTable.Keys() {
+		for _, file_name := range FilesLookupTable.KeySet() {
 			// check if the file has at least 3 replications
 			DNss := []*DataNode{}
-			DNs, _ := FilesLookupTable.Get(file_name)
+			File_entries, _ := FilesLookupTable.Get(file_name)
 			fileOn := 0
-			for _, DN := range DNs {
-				DNss = append(DNss, DN.(*lookupEntry).DataKeeperNode)
+			for _, f_entry := range File_entries {
+				DNss = append(DNss, f_entry.(*lookupEntry).DataKeeperNode)
 				// count it only if node is alive
-				if DN.(*lookupEntry).DataKeeperNode.isAlive() {
+				if f_entry.(*lookupEntry).DataKeeperNode.isAlive() {
 					fileOn++
 				}
 			}
@@ -190,7 +191,7 @@ func getDownloadPorts(fileName string) []string {
 	values, found := FilesLookupTable.Get(fileName)
 	if found {
 		for _, v := range values {
-			if v.(*lookupEntry).DataKeeperNode.isAlive() {
+			if v.(*lookupEntry).DataKeeperNode.isAlive() && !isPortUsed(v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD]) {
 				downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD])
 			}
 		}

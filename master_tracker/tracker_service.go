@@ -52,7 +52,6 @@ func (s *TrackerServer) SendingFinished(ctx context.Context, req *pb.SendingFini
 		// update the last ping time
 		// TODO : SEND TO CLIENT THAT FILE IS READY AND REplicate it
 		sendSuccessToClient(cl_id)
-		log.Println("Sending success to client: ", cl_id)
 
 		FilesLookupTable.Put(req.GetFileName(), &lookupEntry{dnode, req.GetFilePath()})
 		nodes_to_replicate_to := chooseRandomNode([]*DataNode{dnode}, 2)
@@ -66,10 +65,15 @@ func (s *TrackerServer) SendingFinished(ctx context.Context, req *pb.SendingFini
 		}
 	} else {
 		log.Println("DataKeeperNode with ID: ", dk_id, " is not in the lookup table")
+		// remove client from clients_map
+		delete(Clients_Map, cl_id)
 		return &pb.SendingFinishedResponse{
 			OK: false, // https://pbs.twimg.com/media/F01nLwRWcAYL77x.jpg
 		}, nil
 	}
+	// remove client from clients_map
+	delete(Clients_Map, cl_id)
+
 	return &pb.SendingFinishedResponse{
 		OK: true,
 	}, nil
