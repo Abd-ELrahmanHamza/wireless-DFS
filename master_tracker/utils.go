@@ -190,17 +190,19 @@ func isPortUsed(port string) bool {
 }
 
 // a function that get datakeeper ports that contain a certain file name
-func getDownloadPorts(fileName string) []string {
+func getDownloadPorts(fileName string) ([]string, int64) {
 	downloadPorts := []string{}
+	fileSize := int64(0)
 	values, found := FilesLookupTable.Get(fileName)
 	if found {
 		for _, v := range values {
 			if v.(*lookupEntry).DataKeeperNode.isAlive() && !isPortUsed(v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD]) {
 				downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD])
+				fileSize = v.(*lookupEntry).fileSize
 			}
 		}
 	}
-	return downloadPorts
+	return downloadPorts, fileSize
 }
 
 // a function that returns the number of data keeper nodes
