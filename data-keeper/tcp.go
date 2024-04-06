@@ -135,7 +135,7 @@ func handleDownload(conn net.Conn) {
 	println("Received filename: ", filename)
 
 	// Read file offset
-	fileOffset := make([]byte, 4)
+	fileOffset := make([]byte, 8)
 	_, err = io.ReadFull(conn, fileOffset)
 	if err != nil {
 		fmt.Println("Error reading file offset:", err)
