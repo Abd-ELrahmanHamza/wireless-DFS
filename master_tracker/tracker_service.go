@@ -106,6 +106,7 @@ func (s *TrackerServer) DownloadFile(ctx context.Context, req *pb.DownloadFileRe
 	log.Println("Received file download request for: ", fileName)
 	downloadPorts,fileSize := getDownloadPorts(fileName)
 	log.Println("fileSize: ", fileSize)
+	log.Println("downloadPorts: ", downloadPorts)
 	return &pb.DownloadFileResponse{
 		DK_Addresses: downloadPorts,
 		FileSize:	fileSize,
