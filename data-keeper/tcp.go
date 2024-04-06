@@ -106,7 +106,7 @@ func handleUpload(conn net.Conn, masterTrackerService masterPb.TrackerServiceCli
 
 	// Send confirmation to the master tracker
 	masterTrackerService.SendingFinished(context.Background(),
-		&masterPb.SendingFinishedRequest{DK_ID: int32(dataKeeperInfo.id), FileName: filename, FilePath: filepath, Client_ID: int32(receivedID)})
+		&masterPb.SendingFinishedRequest{DK_ID: int32(dataKeeperInfo.id), FileName: filename, FilePath: filepath, Client_ID: int32(receivedID), FileSize: fileSize})
 
 	fmt.Println("File uploaded successfully:", filepath)
 }
