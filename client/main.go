@@ -68,7 +68,8 @@ func parallelDownload(dst *os.File, size int64, numGoroutines int, addresses []s
 	println("num goroutines: ", numGoroutines)
 	var wg sync.WaitGroup
 	wg.Add(numGoroutines)
-
+	// generate buffers for each goroutine list of *bytes.Buffer
+	buffers := make([][]byte, numGoroutines)
 	for i := 0; i < numGoroutines; i++ {
 		go func(i int) {
 			connDK, errDK := net.Dial("tcp", addresses[i])
@@ -101,18 +102,24 @@ func parallelDownload(dst *os.File, size int64, numGoroutines int, addresses []s
 			if err != nil {
 				panic(err)
 			}
-			// seek to the start offset
-			//_, err = dst.Seek(startOffset, io.SeekStart)
-			// Copy the chunk of data from the source to the destination
-			_, err = io.CopyN(dst, connDK, endOffset-startOffset)
-			log.Printf("Finished copying chunk %d", i)
+			buf := make([]byte, endOffset-startOffset)
+			// Copy the chunk of data from the source
+			_, err = io.ReadFull(connDK, buf)
 			if err != nil {
-				panic(err)
+				log.Fatalf("Failed to read from connection: %v", err)
 			}
+			buffers[i] = buf
 		}(i)
 	}
-
 	wg.Wait()
+	// Write the buffers to the destination file
+	for i := 0; i < numGoroutines; i++ {
+		_, err := dst.Write(buffers[i])
+		if err != nil {
+			panic(err)
+		}
+
+	}
 
 	defer func(file *os.File) {
 		err7 := file.Close()
