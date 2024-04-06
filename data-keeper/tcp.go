@@ -46,6 +46,8 @@ import (
 // }
 
 func handleUpload(conn net.Conn, masterTrackerService masterPb.TrackerServiceClient) {
+	defer conn.Close()
+
 	// Read ID
 	idBytes := make([]byte, 4)
 	_, err := io.ReadFull(conn, idBytes)
@@ -132,6 +134,26 @@ func handleDownload(conn net.Conn) {
 	filename := string(filenameBytes)
 	println("Received filename: ", filename)
 
+	// Read file offset
+	fileOffset := make([]byte, 4)
+	_, err = io.ReadFull(conn, fileOffset)
+	if err != nil {
+		fmt.Println("Error reading file offset:", err)
+		return
+	}
+	offset := int(binary.BigEndian.Uint32(fileOffset))
+	println("Received file offset: ", offset)
+
+	// Read requested file size
+	fileSize := make([]byte, 8)
+	_, err = io.ReadFull(conn, fileSize)
+	if err != nil {
+		fmt.Println("Error reading file size:", err)
+		return
+	}
+	size := int64(binary.BigEndian.Uint64(fileSize))
+	println("Received file size: ", size)
+
 	// // Send confirmation to the client
 	// confirmation := "Server ready for download operation"
 	// _, err = conn.Write([]byte(confirmation))
@@ -151,7 +173,12 @@ func handleDownload(conn net.Conn) {
 	defer file.Close()
 
 	// Send file data to client
-	_, err = io.Copy(conn, file)
+	_, err = file.Seek(int64(offset), 0)
+	if err != nil {
+		fmt.Println("Error seeking file:", err)
+		return
+	}
+	_, err = io.CopyN(conn, file, size)
 	if err != nil {
 		fmt.Println("Error sending file data:", err)
 		return
