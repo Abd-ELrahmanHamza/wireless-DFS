@@ -34,6 +34,16 @@ func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.Replicate
 	// Append filename to message
 	message = append(message, []byte(req.FileName)...)
 
+	// add start offset
+	startOffsetBytes := make([]byte, 8) // Assuming int is 8 bytes
+	binary.BigEndian.PutUint64(startOffsetBytes, uint64(0))
+	message = append(message, startOffsetBytes...)
+
+	// add end offset
+	endOffsetBytes := make([]byte, 8) // Assuming int is 8 bytes
+	binary.BigEndian.PutUint64(endOffsetBytes, uint64(0))
+	message = append(message, endOffsetBytes...)
+
 	// Send the message
 	if _, err := conn.Write(message); err != nil {
 		fmt.Println("Error sending data:", err.Error())
