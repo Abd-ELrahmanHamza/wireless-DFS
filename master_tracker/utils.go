@@ -35,7 +35,7 @@ func (d *DataNode) isAlive() bool {
 type lookupEntry struct {
 	DataKeeperNode *DataNode
 	filePath       string
-	fileSize       int64
+	fileSize 		int64
 }
 
 // implement print function for lookupTableEntry
@@ -165,10 +165,8 @@ func check_replications_goRoutine() {
 					log.Println("Replicating to: ", node)
 					filePath := replicate(DNss[0].Addrs[DOWNLOAD], node.Addrs[GRPC], file_name.(string))
 					if filePath != "" {
-						// put file in FilesLoopupTable
-						fileEntries, _ := FilesLookupTable.Get(file_name)
-						entry := fileEntries[0].(*lookupEntry)
-						FilesLookupTable.Put(file_name, &lookupEntry{node, filePath, entry.fileSize})
+						entries ,_ := FilesLookupTable.Get(file_name)
+						FilesLookupTable.Put(file_name, &lookupEntry{node, filePath,entries[0].(*lookupEntry).fileSize})
 					}
 				}
 			}
@@ -194,20 +192,20 @@ func isPortUsed(port string) bool {
 }
 
 // a function that get datakeeper ports that contain a certain file name
-func getDownloadPorts(fileName string) ([]string, int64) {
+func getDownloadPorts(fileName string) ([]string,int64) {
 	downloadPorts := []string{}
-	fileSize := int64(0)
+	file_size := int64(0)
 	values, found := FilesLookupTable.Get(fileName)
-	log.Println("Values: ", values)
 	if found {
 		for _, v := range values {
 			if v.(*lookupEntry).DataKeeperNode.isAlive() && !isPortUsed(v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD]) {
 				downloadPorts = append(downloadPorts, v.(*lookupEntry).DataKeeperNode.Addrs[DOWNLOAD])
-				fileSize = v.(*lookupEntry).fileSize
 			}
 		}
+		entries, _ := FilesLookupTable.Get(fileName)
+		file_size = entries[0].(*lookupEntry).fileSize
 	}
-	return downloadPorts, fileSize
+	return downloadPorts,file_size
 }
 
 // a function that returns the number of data keeper nodes
