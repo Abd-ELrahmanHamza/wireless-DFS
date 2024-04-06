@@ -63,6 +63,9 @@ func parallelDownload(dst *os.File, size int64, numGoroutines int, addresses []s
 	// Number of goroutines to use
 	chunkSize := size / int64(numGoroutines)
 
+	println("file size: ", size)
+	println("chunk size: ", chunkSize)
+	println("num goroutines: ", numGoroutines)
 	var wg sync.WaitGroup
 	wg.Add(numGoroutines)
 
@@ -72,6 +75,7 @@ func parallelDownload(dst *os.File, size int64, numGoroutines int, addresses []s
 			if errDK != nil {
 				log.Fatalf("Failed to connect: %v", errDK)
 			}
+			log.Printf("Connected to %s", addresses[i])
 			defer func(connDK net.Conn) {
 				err7 := connDK.Close()
 				if err7 != nil {
@@ -82,6 +86,7 @@ func parallelDownload(dst *os.File, size int64, numGoroutines int, addresses []s
 
 			startOffset := int64(i) * chunkSize
 			endOffset := startOffset + chunkSize
+			log.Printf("startOffset: %v, endOffset: %v", startOffset, endOffset)
 			if i == numGoroutines-1 {
 				// If this is the last goroutine, copy the remaining data
 				endOffset = size
@@ -96,8 +101,11 @@ func parallelDownload(dst *os.File, size int64, numGoroutines int, addresses []s
 			if err != nil {
 				panic(err)
 			}
+			// seek to the start offset
+			_, err = dst.Seek(startOffset, io.SeekStart)
 			// Copy the chunk of data from the source to the destination
 			_, err = io.CopyN(dst, connDK, endOffset-startOffset)
+			log.Printf("Finished copying chunk %d", i)
 			if err != nil {
 				panic(err)
 			}
@@ -172,6 +180,7 @@ func GetDataKeepersAddresses(conn *grpc.ClientConn, name string) ([]string, int6
 	}
 	addresses := res.GetDK_Addresses()
 	size := res.GetFileSize()
+	log.Printf("Received file size: %v", size)
 	return addresses, size
 }
 
