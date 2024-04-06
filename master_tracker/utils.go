@@ -35,7 +35,7 @@ func (d *DataNode) isAlive() bool {
 type lookupEntry struct {
 	DataKeeperNode *DataNode
 	filePath       string
-	fileSize 	 int64
+	fileSize       int64
 }
 
 // implement print function for lookupTableEntry
@@ -107,8 +107,12 @@ func replicate(srcDownAddr string, dstGrpcAddr string, file_name string) string 
 	}
 	defer conn.Close()
 	c := dkpb.NewDataKeeperServiceClient(conn)
+	entries, _ := FilesLookupTable.Get(file_name)
+	fileSize := entries[0].(*lookupEntry).fileSize
 	ok, err := c.ReplicateFile(context.Background(),
-		&dkpb.ReplicateRequest{FileName: file_name, SrcDkAddr: srcDownAddr})
+		&dkpb.ReplicateRequest{FileName: file_name, SrcDkAddr: srcDownAddr,
+			FileSize: fileSize,
+		})
 	if err != nil {
 		fmt.Println("Error in ReplicateFile: ", err)
 		return ""
@@ -161,7 +165,7 @@ func check_replications_goRoutine() {
 					log.Println("Replicating to: ", node)
 					filePath := replicate(DNss[0].Addrs[DOWNLOAD], node.Addrs[GRPC], file_name.(string))
 					if filePath != "" {
-						// put file in FilesLoopupTable 
+						// put file in FilesLoopupTable
 						fileEntries, _ := FilesLookupTable.Get(file_name)
 						entry := fileEntries[0].(*lookupEntry)
 						FilesLookupTable.Put(file_name, &lookupEntry{node, filePath, entry.fileSize})

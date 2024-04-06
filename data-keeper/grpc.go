@@ -16,7 +16,7 @@ type dataKeeperService struct {
 }
 
 func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.ReplicateRequest) (*pb.ReplicateResponse, error) {
-	println("Replicating file: ", req.FileName, " to address: ", req.SrcDkAddr)
+	println("Replicating file: ", req.FileName, " to address: ", req.SrcDkAddr," from address: ", req.FileSize)
 	conn, err := net.Dial("tcp", req.SrcDkAddr)
 	if err != nil {
 		fmt.Println("Error connecting:", err.Error())
@@ -41,7 +41,7 @@ func (s *dataKeeperService) ReplicateFile(ctx context.Context, req *pb.Replicate
 
 	// add end offset
 	endOffsetBytes := make([]byte, 8) // Assuming int is 8 bytes
-	binary.BigEndian.PutUint64(endOffsetBytes, uint64(0))
+	binary.BigEndian.PutUint64(endOffsetBytes, uint64(req.FileSize))
 	message = append(message, endOffsetBytes...)
 
 	// Send the message
