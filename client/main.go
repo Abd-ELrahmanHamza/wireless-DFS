@@ -5,6 +5,7 @@ import (
 	masterPb "client/master_tracker"
 	"context"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -125,12 +126,15 @@ func GetDataKeepersAddresses(conn *grpc.ClientConn, name string) []string {
 	return addresses
 }
 
-func SelectDK(addresses []string) string {
+func SelectDK(addresses []string) (string, error) {
 	current_time := time.Now().UnixNano()
 	rand.Seed(current_time)
 	// select a random data keeper uniformly
 	index := rand.Intn(len(addresses))
-	return addresses[index]
+	if index >= len(addresses) {
+		return "", fmt.Errorf("no data keeper available")
+	}
+	return addresses[index], nil
 }
 
 func DownloadFile(conn net.Conn, fileName string) {
@@ -202,7 +206,11 @@ func main() {
 		for _, address := range addresses {
 			log.Printf("== Received address: %s", address)
 		}
-		address := SelectDK(addresses)
+		address, dkError := SelectDK(addresses)
+		if dkError != nil {
+			log.Fatalf("Failed to select data keeper: %v", dkError)
+			return
+		}
 		log.Printf("Received address: %s", address)
 
 		// Connect to the data keeper
